@@ -71,6 +71,11 @@ class LLM:
                 system=system,
                 messages=[{"role": "user", "content": user}],
             )
+        except TypeError as e:  # the SDK raises this when no API key / auth token / profile is found
+            if "authentication" not in str(e):
+                raise
+            self.disabled_reason = "no Anthropic credentials"
+            return None
         except anthropic.AuthenticationError:
             self.disabled_reason = "Anthropic authentication failed"
             return None

@@ -7,20 +7,18 @@ Each node is wrapped so its start, end, duration and any error land in the ledge
 """
 from __future__ import annotations
 
+import importlib
 import time
 import traceback
 
 from langgraph.graph import END, StateGraph
 
-from .agents import (cleaner, critic, eda, evaluator, explainer, features, ingestion, leakage_guard,
-                     profiler, reporter, splitter, tester, trainer)
+from .agents import critic
 from .ledger import Ledger
+from .spec import NODES as NODE_NAMES
 from .state import PipelineState
 
-NODES = [("ingestion", ingestion), ("profiler", profiler), ("eda", eda), ("cleaner", cleaner),
-         ("features", features), ("leakage_guard", leakage_guard), ("splitter", splitter),
-         ("trainer", trainer), ("evaluator", evaluator), ("critic", critic), ("tester", tester),
-         ("explainer", explainer), ("reporter", reporter)]
+NODES = [(name, importlib.import_module(f"aqi.agents.{name}")) for name in NODE_NAMES]
 
 
 def _wrap(name, module, ledger: Ledger):

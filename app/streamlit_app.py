@@ -16,21 +16,18 @@ import streamlit as st
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from aqi.graph import NODES  # noqa: E402
 from aqi.ledger import read_events  # noqa: E402
+from aqi.spec import KIND, NODES  # noqa: E402
 
 RUNS = ROOT / "runs"
 CATS = ["Good", "Satisfactory", "Moderate", "Poor", "Very Poor", "Severe"]
-KIND = {"ingestion": "rule", "profiler": "rule", "eda": "rule + LLM", "cleaner": "rule", "features": "rule",
-        "leakage_guard": "rule", "splitter": "rule (locked)", "trainer": "tools", "evaluator": "rule",
-        "critic": "LLM / rule", "tester": "rule (once)", "explainer": "rule + LLM", "reporter": "rule"}
 COLOUR = {"pending": "#d9d9d9", "running": "#f6c344", "done": "#7cc47f", "halted": "#e06666", "error": "#e06666"}
 
 st.set_page_config(page_title="Delhi AQI agentic pipeline", layout="wide")
 
 
 def node_status(events: list[dict]) -> dict[str, dict]:
-    status = {name: {"state": "pending", "seconds": None, "runs": 0} for name, _ in NODES}
+    status = {name: {"state": "pending", "seconds": None, "runs": 0} for name in NODES}
     for e in events:
         n = status.get(e["node"])
         if n is None:
@@ -44,13 +41,12 @@ def node_status(events: list[dict]) -> dict[str, dict]:
 
 def dag(status: dict) -> str:
     lines = ['digraph G { rankdir=LR; node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10];']
-    for name, _ in NODES:
+    for name in NODES:
         s = status[name]
         extra = f"\\n{s['seconds']}s" if s["seconds"] is not None else ""
         extra += f"\\n×{s['runs']}" if s["runs"] > 1 else ""
         lines.append(f'{name} [label="{name}\\n({KIND[name]}){extra}", fillcolor="{COLOUR[s["state"]]}"];')
-    chain = [n for n, _ in NODES]
-    for a, b in zip(chain, chain[1:]):
+    for a, b in zip(NODES, NODES[1:]):
         lines.append(f"{a} -> {b};")
     lines.append('critic -> trainer [style=dashed, label="action", constraint=false];')
     lines.append('leakage_guard -> halt [style=dotted, label="leak"]; halt [shape=octagon, fillcolor="#f4cccc"];')
@@ -58,7 +54,8 @@ def dag(status: dict) -> str:
 
 
 def runs() -> list[str]:
-    return sorted((p.name for p in RUNS.glob("*") if (p / "ledger.jsonl").exists()), reverse=True)
+    found = [p for p in RUNS.glob("*") if (p / "ledger.jsonl").exists()]
+    return [p.name for p in sorted(found, key=lambda p: p.stat().st_mtime, reverse=True)]
 
 
 with st.sidebar:

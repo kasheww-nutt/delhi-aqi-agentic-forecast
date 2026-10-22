@@ -22,6 +22,9 @@ access_token
 # Course material (not ours to redistribute)
 Detailed ESE Evaluation Rubric.pdf
 
+# Local tool config
+.claude/
+
 # OS / editors
 .DS_Store
 Thumbs.db
