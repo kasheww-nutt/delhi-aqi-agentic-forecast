@@ -1,0 +1,56 @@
+# P1 — Delhi next-day AQI-category forecasting. Every agent reads its settings from here;
+# changing behaviour means changing this file (and the ledger records which version ran).
+
+project: delhi-next-day-aqi
+seed: 42
+
+data:
+  cpcb_dir: data/raw/delhi_cpcb          # Kaggle yug201/delhi-air-quality-cpcb-hourly-2010-2026
+  cams_dir: data/raw/cams                # scripts/fetch_cams.py (optional feature group)
+  era5_file: data/raw/era5_delhi_blh.csv # scripts/fetch_era5_blh.py (optional feature group)
+  years: [2018, 2025]                    # 2017 files are padded but ~empty (data gate E6)
+  timezone: Asia/Kolkata                 # confirmed from the diurnal PM2.5 cycle
+
+profiler:
+  min_pm25_coverage: 70                  # % of hours with a valid PM2.5 value
+  min_years_meeting_coverage: 6          # out of the years in data.years
+
+cleaner:
+  drop_column_if_missing_over: 60        # % missing across the whole panel → drop column
+  short_gap_hours: 6                     # interpolate gaps up to this length, per station
+  daily_min_hours: 16                    # a day needs ≥16 valid hours to get a daily mean
+  pm25_ceiling: 1000                     # instrument ceiling: cap + flag, don't delete
+  imputation: station_month_median       # one of: station_month_median | none
+
+features:
+  lags: [1, 2, 3, 7]                     # days before the forecast issue day t
+  rolling_windows: [3, 7]
+  groups:                                # pre-registered groups the critic may toggle
+    pollutant_history: true
+    station_meteorology: true
+    calendar: true
+    city_context: true
+    era5_blh: true                       # silently skipped if era5_file is absent
+    cams_forecast: true                  # silently skipped if cams_dir is empty
+  leaky_demo: false                      # true adds tomorrow's PM2.5 → Leakage Guard must halt
+
+split:
+  train: ["2018-01-01", "2022-12-31"]
+  val:   ["2023-01-01", "2024-12-31"]
+  test:  ["2025-01-01", "2025-12-31"]    # locked: hashed, read once by the Tester
+  lockdown: ["2020-03-25", "2020-06-30"] # flagged, kept in train
+
+trainer:
+  models: [persistence, logreg, random_forest, lightgbm]
+  optuna_trials: 15
+  class_weight: balanced
+
+loop:
+  max_iterations: 4
+  min_improvement: 0.01                  # Δ val macro-F1 needed to keep iterating
+  primary_metric: macro_f1
+
+llm:
+  enabled: true                          # falls back to the rule-based critic without credentials
+  model: claude-opus-5-5
+  effort: medium
