@@ -29,8 +29,10 @@ def check(features: pd.DataFrame, registry: list[dict], agreement_limit: float =
     y = features["target"]
     for r in registry:
         x = features[r["name"]]
-        if x.nunique() > 50:  # bin continuous inputs onto the AQI scale before comparing
-            x = pd.cut(x, [-1e9, 50, 100, 200, 300, 400, 1e9], labels=False) if "aqi" in r["name"] else None
+        if "aqi" in r["name"]:       # AQI-scale inputs: compare on the category scale
+            x = pd.cut(x, [-1e9, 50, 100, 200, 300, 400, 1e9], labels=False)
+        elif x.nunique() > 6:        # other continuous inputs are not comparable to a category
+            x = None
         if x is not None and x.notna().any():
             agree = (x == y)[x.notna()].mean()
             if agree > agreement_limit and r["name"] != "bucket_t0":
