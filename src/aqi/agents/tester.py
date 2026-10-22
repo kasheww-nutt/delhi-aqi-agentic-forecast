@@ -40,7 +40,8 @@ def run(state: dict, ledger: Ledger) -> dict:
         pickle.dump({"model": fitted[best["model"]], "columns": cols, "name": best["model"]}, f)
 
     m, p = results[best["model"]], results["persistence"]
-    ledger.log("tester", "info", f"TEST 2025: {best['model']} macro-F1 {m['macro_f1']:.3f} vs persistence "
+    year = cfg["split"]["test"][0][:4]
+    ledger.log("tester", "info", f"TEST {year}: {best['model']} macro-F1 {m['macro_f1']:.3f} vs persistence "
                f"{p['macro_f1']:.3f}; severe recall {m['severe_recall']:.2f} vs {p['severe_recall']:.2f}",
                results=results, artifacts=["test_predictions.csv"])
     return {"test_results": results, "paths": {**state["paths"], "final_model": str(ledger.artifact("final_model.pkl"))}}

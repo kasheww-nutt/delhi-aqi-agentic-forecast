@@ -72,18 +72,22 @@ def build_models(cfg: dict, overrides: dict, X, y, dates) -> dict:
     cw = overrides.get("class_weight", cfg["trainer"]["class_weight"])
     space = {"max_estimators": 600, "max_leaves": 63, "min_child_lo": 10, **overrides.get("lgbm_space", {})}
     trials = overrides.get("optuna_trials", cfg["trainer"]["optuna_trials"])
+    rf = {"min_samples_leaf": 3, "max_depth": None, **overrides.get("rf", {})}
+    # keep_empty_features: a feature with no values in training (e.g. ERA5 before 2018) keeps its slot,
+    # so column order stays aligned with the registry for SHAP and the tester.
+    impute = lambda: SimpleImputer(strategy="median", keep_empty_features=True)  # noqa: E731
     models = {}
     for name in cfg["trainer"]["models"]:
         if name == "persistence":
             models[name] = (Persistence(), {})
         elif name == "logreg":
-            models[name] = (make_pipeline(SimpleImputer(strategy="median"), StandardScaler(),
+            models[name] = (make_pipeline(impute(), StandardScaler(),
                                           LogisticRegression(max_iter=3000, class_weight=cw, C=1.0)), {})
         elif name == "random_forest":
-            models[name] = (make_pipeline(SimpleImputer(strategy="median"),
-                                          RandomForestClassifier(n_estimators=300, min_samples_leaf=3,
+            models[name] = (make_pipeline(impute(),
+                                          RandomForestClassifier(n_estimators=300, **rf,
                                                                  class_weight="balanced_subsample" if cw else None,
-                                                                 n_jobs=-1, random_state=seed)), {})
+                                                                 n_jobs=-1, random_state=seed)), rf)
         elif name == "lightgbm":
             params = tune_lgbm(X, y, dates, seed, trials, cw, space)
             models[name] = (_lgbm(params, seed, cw), params)

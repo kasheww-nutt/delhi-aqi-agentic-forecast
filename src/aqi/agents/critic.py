@@ -12,7 +12,7 @@ from ..ledger import Ledger
 from ..llm import LLM
 
 TOGGLEABLE = ["station_meteorology", "calendar", "city_context", "era5_blh", "cams_forecast"]
-ACTIONS = (["widen_lgbm_search", "regularize_lgbm", "unweighted_classes", "STOP"]
+ACTIONS = (["widen_lgbm_search", "regularize_lgbm", "regularize_rf", "unweighted_classes", "STOP"]
            + [f"toggle:{g}" for g in TOGGLEABLE])
 
 SYSTEM = """You are the critic agent in a leakage-free next-day AQI-category forecasting pipeline \
@@ -39,9 +39,11 @@ def rule_based(state: dict) -> dict:
     s = h["scores"][h["best_model"]]
     gap = s["train_macro_f1"] - s["macro_f1"]
     tried = {e.get("action") for e in state.get("history", [])}
-    if gap > 0.15 and "regularize_lgbm" not in tried:
-        return {"diagnosis": f"train–val macro-F1 gap {gap:.2f} suggests overfitting",
-                "action": "regularize_lgbm", "rationale": "raise min_child_samples, fewer leaves"}
+    fix = {"lightgbm": ("regularize_lgbm", "raise min_child_samples, fewer leaves"),
+           "random_forest": ("regularize_rf", "larger leaves and a depth limit")}.get(h["best_model"])
+    if gap > 0.15 and fix and fix[0] not in tried:
+        return {"diagnosis": f"{h['best_model']} train–val macro-F1 gap {gap:.2f} suggests overfitting",
+                "action": fix[0], "rationale": fix[1]}
     margin = h["best_score"] - h["scores"]["persistence"]["macro_f1"]
     if (s["severe_recall"] < 0.6 or margin < 0.02) and "widen_lgbm_search" not in tried:
         return {"diagnosis": f"severe recall {s['severe_recall']:.2f}, only {margin:+.3f} over persistence",
@@ -62,6 +64,8 @@ def apply_action(action: str, state: dict) -> dict:
         overrides["lgbm_space"] = {"max_estimators": 1200, "max_leaves": 127}
     elif action == "regularize_lgbm":
         overrides["lgbm_space"] = {**overrides.get("lgbm_space", {}), "max_leaves": 31, "min_child_lo": 60}
+    elif action == "regularize_rf":
+        overrides["rf"] = {"min_samples_leaf": 20, "max_depth": 14}
     elif action == "unweighted_classes":
         overrides["class_weight"] = None
     elif action.startswith("toggle:"):
