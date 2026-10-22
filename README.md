@@ -34,7 +34,7 @@ ingestion → profiler → eda → cleaner → features → leakage_guard ─(le
 | explainer | rule + LLM | SHAP drivers + plain-language notes |
 | reporter | rule | results tables for the report |
 
-Every step is written to `runs/<run_id>/ledger.jsonl`; the dashboard reads only that file.
+Every step is written to `runs/<run_id>/ledger.jsonl`; the console reads only that file and the run's artifacts.
 
 ## Setup
 
@@ -61,8 +61,21 @@ fall back to rule-based behaviour, and the ledger records which path ran.
 python scripts/run_pipeline.py                 # full run
 python scripts/run_pipeline.py --leaky-demo    # adds tomorrow's PM2.5 as a feature: the guard must halt
 python scripts/run_pipeline.py --no-llm        # rule-based critic only
-streamlit run app/streamlit_app.py             # live dashboard (can also start runs)
 pytest                                         # unit tests
 ```
+
+## Console (React + FastAPI)
+
+The pipeline console is a React/TypeScript app (`web/`) backed by a small FastAPI service (`api/`). It shows the
+agents live, the cleaner's decisions, the critic loop, the locked 2025 test (day-by-day forecast strip per station,
+confusion matrix), SHAP drivers and the results summary, and it can start new runs.
+
+```bash
+uvicorn api.server:app --port 8000             # API
+cd web && npm install && npm run dev           # dev server on http://localhost:5173 (proxies /api)
+```
+
+For a single-process setup, run `npm run build` in `web/`, then start uvicorn: it serves the built app at
+http://localhost:8000.
 
 Set `AQI_REPLAY_FROM=<run_id>` to replay a previous run's cached LLM decisions exactly.

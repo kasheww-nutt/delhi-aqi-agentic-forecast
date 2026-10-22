@@ -30,3 +30,7 @@ Detailed ESE Evaluation Rubric.pdf
 Thumbs.db
 .vscode/
 .idea/
+
+# Web app
+web/node_modules/
+web/dist/
