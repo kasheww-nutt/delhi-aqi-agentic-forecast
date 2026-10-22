@@ -64,6 +64,31 @@ python scripts/run_pipeline.py --no-llm        # rule-based critic only
 pytest                                         # unit tests
 ```
 
+## Bring your own dataset
+
+The pipeline runs on any air-quality dataset that fits the use case. The **schema adapter** agent maps it onto
+the canonical schema the Delhi dataset uses ([`src/aqi/schema.py`](src/aqi/schema.py): one row per station-hour,
+IST timestamps, 18 pollutant and weather variables in fixed units).
+
+- **Layouts:** wide (one column per variable) or long (OpenAQ-style `parameter / value / unit` rows); CSV, CSV.GZ,
+  Parquet or Excel; one file or a folder (side tables with station names and cities are joined automatically).
+- **Detection:** timestamp column (or date + time), timezone (tz-aware data is converted to IST), station column
+  (or the file name), granularity (sub-hourly is averaged to hours; daily data stays daily).
+- **Mapping:** aliases (`O3` → `Ozone`, `pm2_5` → `PM2.5`, …), units from headers or unit columns, converted with
+  molar masses for ppb/ppm and standard factors for weather units. Columns the rules can't place are offered to
+  Claude, whose answer must name a canonical variable and a convertible unit. A source's own AQI is never imported.
+- **Checks:** physically impossible values become missing; data without at least three pollutants (PM2.5 or PM10
+  among them) is rejected with a reason.
+
+```bash
+python scripts/adapt_dataset.py data/raw/external/vopani --name vopani_delhi --city Delhi
+python scripts/run_pipeline.py --config configs/vopani_delhi.yaml
+```
+
+The script writes `data/processed/<name>/canonical.parquet`, a `schema_report.json` with every mapping decision,
+and `configs/<name>.yaml` with years and a train/val/test split fitted to that dataset. Adapted datasets also appear
+in the console's dataset picker. Setting `data.source: {format: auto, path: ...}` in a config adapts inside the run.
+
 ## Console (React + FastAPI)
 
 The pipeline console is a React/TypeScript app (`web/`) backed by a small FastAPI service (`api/`). It shows the

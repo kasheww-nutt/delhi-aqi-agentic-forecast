@@ -16,7 +16,7 @@ from ..config import resolve
 from ..ledger import Ledger
 
 # Diwali (Lakshmi Puja) dates — fireworks spike PM2.5 for ~2 days around them.
-DIWALI = ["2018-11-07", "2019-10-27", "2020-11-14", "2021-11-04", "2022-10-24", "2023-11-12",
+DIWALI = ["2015-11-11", "2016-10-30", "2017-10-19", "2018-11-07", "2019-10-27", "2020-11-14", "2021-11-04", "2022-10-24", "2023-11-12",
           "2024-10-31", "2025-10-20"]
 POLLUTANTS = ["PM2.5", "PM10", "NO2", "CO", "Ozone", "SO2", "NH3"]
 MET = ["AT", "RH", "WS", "WD_sin", "WD_cos", "RF", "SR", "BP"]

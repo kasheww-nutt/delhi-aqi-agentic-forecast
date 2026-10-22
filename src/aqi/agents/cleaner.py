@@ -17,10 +17,12 @@ MEAN_24H = ["PM2.5", "PM10", "NO2", "SO2", "NH3"]
 MAX_8H = ["CO", "Ozone"]
 
 
-def _daily(h: pd.DataFrame, cols: list[str], min_hours: int) -> pd.DataFrame:
+def _daily(h: pd.DataFrame, cols: list[str], min_hours: int, daily_input: bool = False) -> pd.DataFrame:
     h = h.assign(date=h.timestamp.dt.normalize())
     g = h.groupby(["station", "date"], observed=True)
-    mean_cols = [c for c in cols if c not in ("WD", "RF", *MAX_8H)]
+    if daily_input:  # source already reports daily values (one row per station-day)
+        min_hours = 1
+    mean_cols = [c for c in cols if c not in ("WD", "RF", *([] if daily_input else MAX_8H))]
     daily = g[mean_cols].mean().where(g[mean_cols].count() >= min_hours)
     if "RF" in cols:
         daily["RF"] = g["RF"].sum(min_count=min_hours)
@@ -29,7 +31,7 @@ def _daily(h: pd.DataFrame, cols: list[str], min_hours: int) -> pd.DataFrame:
         h["WD_sin"], h["WD_cos"] = np.sin(rad), np.cos(rad)
         g = h.groupby(["station", "date"], observed=True)
         daily[["WD_sin", "WD_cos"]] = g[["WD_sin", "WD_cos"]].mean()
-    for c in [c for c in MAX_8H if c in cols]:
+    for c in [c for c in MAX_8H if c in cols and not daily_input]:
         roll = h.groupby("station", observed=True)[c].transform(lambda s: s.rolling(8, min_periods=6).mean())
         daily[c] = roll.groupby([h.station, h.date], observed=True).max()
     return daily.reset_index()
@@ -63,15 +65,20 @@ def run(state: dict, ledger: Ledger) -> dict:
     decisions.append(f"dropped {dropped or 'no'} columns (> {cfg['drop_column_if_missing_over']}% missing)")
 
     # 3. Short gaps: linear interpolation within each station, never across long outages.
-    h[kept] = (h.groupby("station", observed=True)[kept]
-               .transform(lambda s: s.interpolate(limit=cfg["short_gap_hours"], limit_area="inside")))
-    decisions.append(f"interpolated gaps ≤ {cfg['short_gap_hours']} h within each station")
+    daily_input = state.get("granularity") == "daily"
+    if daily_input:
+        decisions.append("source is daily: no hourly interpolation, daily values used as reported")
+    else:
+        h[kept] = (h.groupby("station", observed=True)[kept]
+                   .transform(lambda s: s.interpolate(limit=cfg["short_gap_hours"], limit_area="inside")))
+        decisions.append(f"interpolated gaps ≤ {cfg['short_gap_hours']} h within each station")
 
     # 4. Daily aggregation (CPCB averaging rules) and AQI from observed data.
-    daily = _daily(h, kept, cfg["daily_min_hours"])
+    daily = _daily(h, kept, cfg["daily_min_hours"], daily_input)
     daily["aqi"] = _aqi(daily)
     daily["bucket"] = bucket(daily["aqi"])
-    decisions.append(f"daily means need ≥ {cfg['daily_min_hours']} valid hours; CO/O3 use the max 8-h mean")
+    if not daily_input:
+        decisions.append(f"daily means need ≥ {cfg['daily_min_hours']} valid hours; CO/O3 use the max 8-h mean")
 
     # 5. Long gaps in *inputs*: station-month medians learned from the training period only.
     feat_cols = [c for c in daily.columns if c not in ("station", "date", "aqi", "bucket")]

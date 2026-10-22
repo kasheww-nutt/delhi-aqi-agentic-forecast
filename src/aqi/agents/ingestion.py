@@ -28,10 +28,30 @@ def _read_station_year(path: Path) -> pd.DataFrame:
     return out.dropna(subset=["timestamp"])
 
 
+def _from_canonical(path: str, y0: int, y1: int) -> pd.DataFrame:
+    """A dataset the schema adapter already mapped onto the canonical schema."""
+    h = pd.read_parquet(path)
+    h = h[h.timestamp.dt.year.between(y0, y1)].copy()
+    for col in KEEP:
+        if col not in h:
+            h[col] = np.float32(np.nan)
+    return h[["timestamp", *KEEP, "station"]]
+
+
 def run(state: dict, ledger: Ledger) -> dict:
     cfg = state["config"]["data"]
-    root = resolve(cfg["cpcb_dir"])
     y0, y1 = cfg["years"]
+    if "canonical" in state.get("paths", {}):
+        hourly = _from_canonical(state["paths"]["canonical"], y0, y1)
+        hourly["station"] = hourly["station"].astype("category")
+        out = ledger.dir / "hourly.parquet"
+        hourly.to_parquet(out, index=False)
+        ledger.log("ingestion", "info", f"adapted dataset: {hourly.station.nunique()} stations, {len(hourly):,} "
+                   f"{state.get('granularity', 'hourly')} rows ({y0}–{y1})",
+                   metrics={"stations": int(hourly.station.nunique()), "rows": len(hourly)})
+        return {"paths": {**state["paths"], "hourly": str(out)}}
+
+    root = resolve(cfg["cpcb_dir"])
     files = sorted(p for y in range(y0, y1 + 1) for p in (root / str(y)).glob("site_*_1Hr.csv"))
     if not files:
         raise FileNotFoundError(f"No station files under {root}; download the Kaggle dataset first.")

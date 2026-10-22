@@ -5,6 +5,7 @@ project: delhi-next-day-aqi
 seed: 42
 
 data:
+  source: {format: native}               # native | auto (adapt in-pipeline) | canonical (scripts/adapt_dataset.py)
   cpcb_dir: data/raw/delhi_cpcb          # Kaggle yug201/delhi-air-quality-cpcb-hourly-2010-2026
   cams_dir: data/raw/cams                # scripts/fetch_cams.py (optional feature group)
   era5_file: data/raw/era5_delhi_blh.csv # scripts/fetch_era5_blh.py (optional feature group)

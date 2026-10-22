@@ -13,6 +13,7 @@ class PipelineState(TypedDict, total=False):
     config: dict
     paths: dict[str, str]            # name → parquet/csv path inside runs/<run_id>/
     stations: list[str]
+    granularity: str                 # "hourly" or "daily", decided by the schema adapter
     feature_groups: dict[str, bool]  # what the critic is allowed to toggle
     feature_columns: list[str]
     trainer_overrides: dict[str, Any]

@@ -39,8 +39,8 @@ def build(ledger: Ledger):
     g = StateGraph(PipelineState)
     for name, module in NODES:
         g.add_node(name, _wrap(name, module, ledger))
-    g.set_entry_point("ingestion")
-    for a, b in [("ingestion", "profiler"), ("profiler", "eda"), ("eda", "cleaner"), ("cleaner", "features"),
+    g.set_entry_point("schema_adapter")
+    for a, b in [("schema_adapter", "ingestion"), ("ingestion", "profiler"), ("profiler", "eda"), ("eda", "cleaner"), ("cleaner", "features"),
                  ("features", "leakage_guard"), ("splitter", "trainer"), ("trainer", "evaluator"),
                  ("evaluator", "critic"), ("explainer", "reporter"), ("reporter", END)]:
         g.add_edge(a, b)
@@ -52,7 +52,8 @@ def build(ledger: Ledger):
 
 def run(config: dict, run_id: str | None = None) -> tuple[dict, Ledger]:
     ledger = Ledger(run_id)
-    ledger.log("pipeline", "start", f"config {config['_path']} (sha {config['_sha']})")
+    ledger.log("pipeline", "start", f"config {config['_path']} (sha {config['_sha']})",
+               project=config.get("project"), source=config["data"].get("source", {"format": "native"}))
     app = build(ledger)
     final = app.invoke({"run_id": ledger.run_id, "config": config, "paths": {}, "history": [], "iteration": 0},
                        {"recursion_limit": 100})
