@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { api, useResource } from "../api";
-import { reports } from "../ledger";
+import { reports, splitYears } from "../ledger";
 import { CATEGORIES, type LedgerEvent, type Scores, type StationForecast } from "../types";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -14,8 +14,8 @@ function stationLabel(id: string) {
   return id.replace(/^\d+_/, "").replace(/_Delhi.*$/, "").replace(/_/g, " ");
 }
 
-/** Signature view: one tick per day of 2025, actual vs forecast, in CPCB category colours. */
-function ForecastStrip(props: { data: Record<string, StationForecast>; model: string }) {
+/** Signature view: one tick per day of the test year, actual vs forecast, in CPCB category colours. */
+function ForecastStrip(props: { data: Record<string, StationForecast>; model: string; year: string }) {
   const stations = useMemo(() => Object.keys(props.data).sort((a, b) => stationLabel(a).localeCompare(stationLabel(b))), [props.data]);
   const [station, setStation] = useState(() => stations.find((s) => s.includes("Anand_Vihar")) ?? stations[0]);
   const [against, setAgainst] = useState<"predicted" | "persistence">("predicted");
@@ -31,7 +31,7 @@ function ForecastStrip(props: { data: Record<string, StationForecast>; model: st
   const row = (values: number[], label: string, cls = "") => (
     <>
       <span className="row-label">{label}</span>
-      <div className={`ticks ${cls}`} style={{ gridTemplateColumns: "repeat(365, minmax(0, 1fr))" }}>
+      <div className={`ticks ${cls}`} style={{ gridTemplateColumns: "repeat(366, minmax(0, 1fr))" }}>
         {values.map((v, i) =>
           cls === "hits" ? (
             <span key={i} className={v ? "miss" : ""} style={{ gridColumn: days[i] }} />
@@ -46,7 +46,7 @@ function ForecastStrip(props: { data: Record<string, StationForecast>; model: st
 
   return (
     <section className="card">
-      <h2>2025, day by day</h2>
+      <h2>{props.year}, day by day</h2>
       <p className="lede">
         Each tick is one day of the locked test year at one station: the category that happened, and the one forecast
         the evening before. Black marks underneath are misses.
@@ -117,7 +117,8 @@ function Confusion(props: { matrix: number[][]; model: string }) {
 export function TestView(props: { runId: string; events: LedgerEvent[] }) {
   const tester = reports(props.events, "tester")[0];
   const preds = useResource(() => api.predictions(props.runId), [props.runId, !!tester]);
-  if (!tester) return <p className="empty">The 2025 test year is still locked. The tester runs once, after the critic stops the loop.</p>;
+  const year = splitYears(props.events).test;
+  if (!tester) return <p className="empty">The {year} test year is still locked. The tester runs once, after the critic stops the loop.</p>;
   const results = tester.results as Record<string, Scores>;
   const model = Object.keys(results).find((m) => m !== "persistence")!;
   const rows: [string, keyof Scores, boolean][] = [
@@ -131,7 +132,7 @@ export function TestView(props: { runId: string; events: LedgerEvent[] }) {
         <h2>Locked test, scored once</h2>
         <p className="lede">{tester.summary}</p>
         <table className="metrics">
-          <thead><tr><th>Metric (2025)</th><th>{model}</th><th>persistence</th><th>Difference</th></tr></thead>
+          <thead><tr><th>Metric ({year})</th><th>{model}</th><th>persistence</th><th>Difference</th></tr></thead>
           <tbody>
             {rows.map(([label, key, higherIsBetter]) => {
               const a = results[model][key] as number, b = results.persistence[key] as number;
@@ -149,7 +150,7 @@ export function TestView(props: { runId: string; events: LedgerEvent[] }) {
         </table>
       </section>
       {preds === undefined && <p className="muted">Loading forecasts…</p>}
-      {preds && <ForecastStrip data={preds} model={model} />}
+      {preds && <ForecastStrip data={preds} model={model} year={year} />}
       <Confusion matrix={results[model].confusion!} model={model} />
     </>
   );

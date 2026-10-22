@@ -35,7 +35,18 @@ export function hasArtifact(events: LedgerEvent[], node: string, name: string): 
   return reports(events, node).some((e) => Array.isArray(e.artifacts) && (e.artifacts as string[]).includes(name));
 }
 
-export const clock =(ts: number) =>
+/** Year labels of this run's split, e.g. { train: "2018–2022", val: "2023–2024", test: "2025" }. */
+export function splitYears(events: LedgerEvent[]) {
+  const ranges = (reports(events, "splitter")[0]?.metrics as { ranges?: Record<string, [string, string]> } | undefined)?.ranges;
+  const label = (r?: [string, string]) => {
+    if (!r) return "";
+    const [a, b] = [r[0].slice(0, 4), r[1].slice(0, 4)];
+    return a === b ? a : `${a}–${b}`;
+  };
+  return { train: label(ranges?.train), val: label(ranges?.val), test: label(ranges?.test) || "test year" };
+}
+
+export const clock = (ts: number) =>
   new Date(ts * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
 
 export const humanName = (node: string) => node.replace("_", " ");

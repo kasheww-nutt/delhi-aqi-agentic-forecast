@@ -1,5 +1,5 @@
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { reports } from "../ledger";
+import { reports, splitYears } from "../ledger";
 import type { CriticDecision, LedgerEvent, Scores } from "../types";
 
 const MODEL_COLOUR: Record<string, string> = {
@@ -12,6 +12,7 @@ const MODEL_COLOUR: Record<string, string> = {
 export function LoopView(props: { events: LedgerEvent[] }) {
   const evals = reports(props.events, "evaluator");
   const critics = reports(props.events, "critic");
+  const years = splitYears(props.events);
   if (evals.length === 0) return <p className="empty">Training hasn't finished its first iteration yet.</p>;
 
   const models = Object.keys(evals[0].scores as Record<string, Scores>);
@@ -27,7 +28,9 @@ export function LoopView(props: { events: LedgerEvent[] }) {
     <>
       <section className="card">
         <h2>Validation macro-F1 by iteration</h2>
-        <p className="lede">Scored on 2023–2024 only. The critic sees these numbers; the 2025 test year stays locked.</p>
+        <p className="lede">
+          Scored on {years.val} only. The critic sees these numbers; the {years.test} test year stays locked.
+        </p>
         <div style={{ height: 260 }}>
           <ResponsiveContainer>
             <LineChart data={series} margin={{ top: 8, right: 16, bottom: 0, left: -12 }}>

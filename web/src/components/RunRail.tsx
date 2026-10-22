@@ -1,6 +1,12 @@
 import { useState } from "react";
-import { api } from "../api";
-import { CATEGORIES, type RunSummary } from "../types";
+import { api, useResource } from "../api";
+import { CATEGORIES, type DatasetConfig, type RunSummary } from "../types";
+
+function datasetLabel(c: DatasetConfig) {
+  if (!c.adapted) return `${c.name} · CPCB Kaggle, native`;
+  const a = c.adapted;
+  return `${c.name} · ${a.stations} stations, ${a.start.slice(0, 4)}–${a.end.slice(0, 4)}`;
+}
 
 const STATUS_TEXT: Record<RunSummary["status"], string> = {
   running: "Running",
@@ -10,8 +16,10 @@ const STATUS_TEXT: Record<RunSummary["status"], string> = {
 };
 
 function describe(run: RunSummary) {
-  if (run.test) return `Test macro-F1 ${run.test.macro_f1.toFixed(3)} · persistence ${run.test.persistence_f1.toFixed(3)}`;
-  return STATUS_TEXT[run.status];
+  const result = run.test
+    ? `F1 ${run.test.macro_f1.toFixed(3)} vs ${run.test.persistence_f1.toFixed(3)}`
+    : STATUS_TEXT[run.status];
+  return `${run.dataset} · ${result}`;
 }
 
 export function RunRail(props: {
@@ -19,6 +27,8 @@ export function RunRail(props: {
   selected: string | null;
   onSelect: (id: string) => void;
 }) {
+  const configs = useResource(api.configs, []);
+  const [config, setConfig] = useState("delhi");
   const [leaky, setLeaky] = useState(false);
   const [noLlm, setNoLlm] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -28,7 +38,7 @@ export function RunRail(props: {
     setStarting(true);
     setError(null);
     try {
-      const { id } = await api.startRun({ leaky_demo: leaky, no_llm: noLlm });
+      const { id } = await api.startRun({ config, leaky_demo: leaky, no_llm: noLlm });
       props.onSelect(id);
     } catch (e) {
       setError((e as Error).message);
@@ -42,7 +52,7 @@ export function RunRail(props: {
       <div>
         <div className="brand">
           Delhi next-day AQI
-          <small>Agentic forecasting pipeline · CPCB stations 2018–2025</small>
+          <small>Agentic forecasting pipeline · Delhi CPCB stations or any adapted dataset</small>
         </div>
         <div className="band" aria-hidden="true">
           {CATEGORIES.map((_, i) => (
@@ -54,6 +64,14 @@ export function RunRail(props: {
       <section>
         <p className="section-label">New run</p>
         <div className="new-run">
+          <label className="field">
+            <span>Dataset</span>
+            <select value={config} onChange={(e) => setConfig(e.target.value)}>
+              {(configs ?? [{ name: "delhi" } as DatasetConfig]).map((c) => (
+                <option key={c.name} value={c.name}>{c.project ? datasetLabel(c) : c.name}</option>
+              ))}
+            </select>
+          </label>
           <label className="check">
             <input type="checkbox" checked={leaky} onChange={(e) => setLeaky(e.target.checked)} />
             <span>Add a leaky feature (the guard should stop the run)</span>

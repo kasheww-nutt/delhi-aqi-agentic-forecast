@@ -5,12 +5,14 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+import yaml
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -38,7 +40,10 @@ def _summary(d: Path) -> dict:
     error = next((e for e in events if e["status"] == "error"), None)
     tester = next((e for e in events if e["node"] == "tester" and e["status"] == "info"), None)
     status = "error" if error else "running" if end is None else end["status"]
-    out = {"id": d.name, "status": status, "started": events[0]["ts"] if events else None,
+    start = events[0] if events else {}
+    cfg_name = re.search(r"configs[\\/]([\w\-]+)\.yaml", start.get("summary", ""))
+    out = {"id": d.name, "status": status, "dataset": cfg_name.group(1) if cfg_name else "delhi",
+           "started": events[0]["ts"] if events else None,
            "finished": end["ts"] if end else None, "reason": (error or end or {}).get("summary", "")}
     if tester:
         best = next(m for m in tester["results"] if m != "persistence")
@@ -104,15 +109,40 @@ def text(run_id: str, name: str):
     return {"name": name, "content": path.read_text(encoding="utf-8")}
 
 
+@app.get("/api/configs")
+def configs():
+    """Datasets the pipeline can run on: the native Delhi config plus every adapted dataset."""
+    out = []
+    for p in sorted((ROOT / "configs").glob("*.yaml")):
+        cfg = yaml.safe_load(p.read_text(encoding="utf-8"))
+        src = cfg["data"].get("source", {"format": "native"})
+        report = None
+        if src.get("format") == "canonical":
+            rp = ROOT / Path(src["path"]).parent / "schema_report.json"
+            if rp.exists():
+                r = json.loads(rp.read_text())
+                report = {"stations": r["stations"], "granularity": r["granularity"], "city": r.get("city_filter"),
+                          "start": r["start"][:10], "end": r["end"][:10]}
+        out.append({"name": p.stem, "project": cfg.get("project"), "format": src.get("format", "native"),
+                    "years": cfg["data"]["years"], "adapted": report})
+    return out
+
+
 class NewRun(BaseModel):
+    config: str = "delhi"
     leaky_demo: bool = False
     no_llm: bool = False
 
 
 @app.post("/api/runs")
 def start_run(body: NewRun):
-    run_id = datetime.now().strftime("%Y%m%d-%H%M%S") + ("-leaky" if body.leaky_demo else "")
-    cmd = [sys.executable, str(ROOT / "scripts" / "run_pipeline.py"), "--run-id", run_id]
+    cfg_path = ROOT / "configs" / f"{body.config}.yaml"
+    if not re.fullmatch(r"[A-Za-z0-9_\-]+", body.config) or not cfg_path.exists():
+        raise HTTPException(404, f"no config named {body.config}")
+    suffix = "" if body.config == "delhi" else f"-{body.config}"
+    run_id = datetime.now().strftime("%Y%m%d-%H%M%S") + suffix + ("-leaky" if body.leaky_demo else "")
+    cmd = [sys.executable, str(ROOT / "scripts" / "run_pipeline.py"), "--run-id", run_id,
+           "--config", f"configs/{body.config}.yaml"]
     cmd += ["--leaky-demo"] if body.leaky_demo else []
     cmd += ["--no-llm"] if body.no_llm else []
     subprocess.Popen(cmd, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

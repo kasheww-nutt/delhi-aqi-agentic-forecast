@@ -1,6 +1,13 @@
 import { Architecture } from "../components/Architecture";
-import { clock, humanName, reports, type NodeStatus } from "../ledger";
+import { clock, humanName, reports, splitYears, type NodeStatus } from "../ledger";
 import type { LedgerEvent, RunSummary, Scores } from "../types";
+
+function sourceLabel(run: RunSummary, events: LedgerEvent[]) {
+  const adapter = reports(events, "schema_adapter")[0];
+  const fmt = (adapter?.source as { format?: string } | undefined)?.format ?? "native";
+  if (fmt === "native") return { title: "Delhi CPCB", sub: "Kaggle · hourly · native" };
+  return { title: run.dataset, sub: fmt === "auto" ? "mapped in this run" : "adapted dataset" };
+}
 
 function Stat(props: { value: string; label: string; note?: string; tone?: "good" | "bad" }) {
   return (
@@ -24,6 +31,7 @@ export function OverviewView(props: {
   const results = tester?.results as Record<string, Scores> | undefined;
   const model = results && Object.keys(results).find((m) => m !== "persistence");
   const iterations = reports(events, "evaluator").length;
+  const years = splitYears(events);
   const recent = events.filter((e) => e.status === "info" || e.status === "halt" || e.status === "error").slice(-5).reverse();
 
   const f1 = model && results ? results[model].macro_f1 - results.persistence.macro_f1 : null;
@@ -35,19 +43,19 @@ export function OverviewView(props: {
       <section className="stats">
         {results && model ? (
           <>
-            <Stat value={results[model].macro_f1.toFixed(3)} label={`2025 macro-F1 · ${model}`}
+            <Stat value={results[model].macro_f1.toFixed(3)} label={`${years.test} macro-F1 · ${model}`}
               note={`${signed(f1!)} vs tomorrow = today`} tone={f1! > 0 ? "good" : "bad"} />
             <Stat value={results[model].severe_recall.toFixed(2)} label="Very Poor/Severe days caught"
               note={`${signed(sev!)} vs tomorrow = today`} tone={sev! > 0 ? "good" : "bad"} />
             <Stat value={`${(results[model].within_one_category * 100).toFixed(0)}%`} label="within one category" />
           </>
         ) : (
-          <Stat value="—" label="2025 test" note="scored once, after the training loop stops" />
+          <Stat value="—" label={`${years.test} test`} note="scored once, after the training loop stops" />
         )}
         <Stat value={String(iterations || "—")} label="training iterations" />
         {split?.sizes && (
           <Stat value={(split.sizes.train + split.sizes.val).toLocaleString()} label="station-days to learn from"
-            note={`${split.sizes.test.toLocaleString()} locked for 2025`} />
+            note={`${split.sizes.test.toLocaleString()} locked for ${years.test}`} />
         )}
       </section>
 
@@ -56,7 +64,7 @@ export function OverviewView(props: {
           <h2>How the pipeline is built</h2>
           <p>Live status of every agent. Select an agent to read its ledger entries. ✦ marks the agents that consult Claude.</p>
         </div>
-        <Architecture status={props.status} focus={null} onSelect={props.onOpenAgent} />
+        <Architecture status={props.status} source={sourceLabel(props.run, events)} onSelect={props.onOpenAgent} />
         <div className="legend">
           {["pending", "running", "done", "halted"].map((s) => (
             <span key={s}><i className={`legend-swatch ${s}`} /> {s === "halted" ? "halted / failed" : s}</span>

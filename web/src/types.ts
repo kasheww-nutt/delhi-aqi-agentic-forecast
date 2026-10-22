@@ -1,8 +1,37 @@
 export type RunStatus = "running" | "done" | "halted" | "error";
 
+export interface DatasetConfig {
+  name: string;
+  project: string;
+  format: "native" | "canonical" | "auto";
+  years: [number, number];
+  adapted: { stations: number; granularity: string; city: string | null; start: string; end: string } | null;
+}
+
+export interface SchemaReport {
+  source: string;
+  files_used: { file: string; layout: string; timestamp: string; station: string; tz: string; granularity: string }[];
+  files_skipped: { file: string; reason: string }[];
+  metadata_files: string[];
+  granularity: string;
+  city_filter: string | null;
+  stations: number;
+  rows: number;
+  start: string;
+  end: string;
+  mappings: { source: string; canonical: string; unit_from: string; unit_to: string; conversion: string; by: string }[];
+  ignored: { column: string; reason: string }[];
+  missing_variables: string[];
+  out_of_range_set_missing: Record<string, number>;
+  coverage_pct: Record<string, number>;
+  warnings: string[];
+  suggested_settings?: { split: Record<"train" | "val" | "test", [string, string]> };
+}
+
 export interface RunSummary {
   id: string;
   status: RunStatus;
+  dataset: string;
   started: number | null;
   finished: number | null;
   reason: string;

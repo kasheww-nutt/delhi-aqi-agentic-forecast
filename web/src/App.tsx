@@ -15,7 +15,7 @@ const TABS = [
   { id: "overview", label: "Overview" },
   { id: "data", label: "Data" },
   { id: "loop", label: "Training" },
-  { id: "test", label: "2025 test" },
+  { id: "test", label: "Test year" },
   { id: "drivers", label: "Drivers" },
   { id: "ledger", label: "Ledger" },
   { id: "report", label: "Summary" },

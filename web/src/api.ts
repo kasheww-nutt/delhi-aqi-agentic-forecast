@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { LedgerEvent, RunSummary, SpecNode, StationForecast } from "./types";
+import type { DatasetConfig, LedgerEvent, RunSummary, SpecNode, StationForecast } from "./types";
 
 async function get<T>(path: string): Promise<T> {
   const r = await fetch(path);
@@ -10,12 +10,13 @@ async function get<T>(path: string): Promise<T> {
 export const api = {
   spec: () => get<SpecNode[]>("/api/spec"),
   runs: () => get<RunSummary[]>("/api/runs"),
+  configs: () => get<DatasetConfig[]>("/api/configs"),
   events: (id: string) => get<LedgerEvent[]>(`/api/runs/${id}/events`),
   predictions: (id: string) => get<Record<string, StationForecast>>(`/api/runs/${id}/predictions`),
   shap: (id: string) => get<{ feature: string; importance: number }[]>(`/api/runs/${id}/shap`),
   text: (id: string, name: string) => get<{ content: string }>(`/api/runs/${id}/text/${name}`),
   artifactUrl: (id: string, name: string) => `/api/runs/${id}/artifacts/${name}`,
-  startRun: async (body: { leaky_demo: boolean; no_llm: boolean }) => {
+  startRun: async (body: { config: string; leaky_demo: boolean; no_llm: boolean }) => {
     const r = await fetch("/api/runs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import { api, useResource } from "../api";
+import { SchemaCard } from "../components/SchemaCard";
 import { hasArtifact, reports } from "../ledger";
 import type { LedgerEvent } from "../types";
 
@@ -19,6 +20,7 @@ export function DataView(props: { runId: string; events: LedgerEvent[] }) {
 
   return (
     <>
+      <SchemaCard runId={runId} events={events} />
       {guard && (
         <section className="card" style={{ borderLeft: `4px solid var(${guard.status === "halt" ? "--bad" : "--ok"})` }}>
           <h2>Leakage guard</h2>
