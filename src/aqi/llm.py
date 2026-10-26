@@ -34,8 +34,7 @@ except ImportError:  # pragma: no cover
 # .cmd shims and cmd.exe would re-parse quotes and symbols in arguments. agy reads no stdin; it is a
 # real .exe, so its prompt is passed as one argument (quoted by CreateProcess, not re-parsed by cmd).
 CLI_FLAGS = {
-    "claude": lambda schema, out, web, prompt: ["-p", "--output-format", "json"]
-                                               + (["--allowedTools", "WebSearch", "WebFetch"] if web else []),
+    "claude": lambda schema, out, web, prompt: ["-p", "--output-format", "json"],  # tools added in _tool_flags
     "gemini": lambda schema, out, web, prompt: ["-p", "Answer the request given on standard input.", "-o", "json",
                                                 "--approval-mode", "plan"],
     "codex": lambda schema, out, web, prompt: ["exec", "--skip-git-repo-check", "--ephemeral", "-s", "read-only",
@@ -81,7 +80,12 @@ def _reply_text(name: str, stdout: str, out_file: Path) -> str:
 
 
 class LLM:
-    def __init__(self, cfg: dict, ledger: Ledger, agent: str = "llm"):
+    def __init__(self, cfg: dict, ledger: Ledger, agent: str = "llm", mcp: dict | None = None,
+                 timeout: int = CLI_TIMEOUT):
+        """`mcp` = {"servers": {name: {"command", "args"}}, "tools": ["mcp__<server>__<tool>", ...]}:
+        MCP servers the CLI may start, and the only tools it may call (Claude Code)."""
+        self.mcp = mcp
+        self.timeout = timeout  # tool-using calls (web search, MCP) need longer than plain answers
         self.cfg = cfg
         self.ledger = ledger
         self.agent = agent  # the ledger node each CLI call is logged under (shown in the agent terminals)
@@ -105,7 +109,7 @@ class LLM:
 
         A schema-shaped answer is checked for its required keys and enum values here; agents still
         validate meaning (e.g. that an action is allowed) themselves."""
-        key = hashlib.sha256(json.dumps([self.backend, system, user, schema, web]).encode()).hexdigest()
+        key = hashlib.sha256(json.dumps([self.backend, system, user, schema, web, self.mcp]).encode()).hexdigest()
         if key in self.cache:
             self.answered_by = "cache"
             return self.cache[key]
@@ -135,7 +139,7 @@ class LLM:
                     self._log_call(name, t0, schema, web, reply=result)
                     return result
                 except subprocess.TimeoutExpired:
-                    errors.append(f"{name}: timed out after {CLI_TIMEOUT}s")
+                    errors.append(f"{name}: timed out after {self.timeout}s")
                     self._log_call(name, t0, schema, web, error=errors[-1])
                     break
                 except (ValueError, json.JSONDecodeError) as e:
@@ -153,11 +157,19 @@ class LLM:
     def _log_call(self, name: str, t0: float, schema: dict | None, web: bool, reply=None, error: str | None = None):
         """One ledger event per CLI call: the command line (prompt elided), the prompt and the raw answer."""
         flags = CLI_FLAGS[name]("<schema.json>" if schema else None, "<answer.txt>", web, "<prompt>")
+        flags += self._tool_flags(name, web, "<mcp.json>")
         reply_text = json.dumps(reply, indent=2, ensure_ascii=False) if isinstance(reply, dict) else reply
         self.ledger.log(self.agent, "llm", f"{name} {'answered' if error is None else 'failed'} in {time.time() - t0:.0f}s",
                         cli=name, command=" ".join([name, *flags]), prompt=(self._last_prompt or "")[:6000],
                         reply=(reply_text or "")[:6000], error=error, seconds=round(time.time() - t0, 1),
                         stdin=name in STDIN_PROMPT)
+
+    def _tool_flags(self, name: str, web: bool, mcp_path: str) -> list[str]:
+        """Tools a CLI may use: web search and/or our MCP tools (an explicit allow-list, nothing else)."""
+        if name != "claude":
+            return []
+        allowed = (["WebSearch", "WebFetch"] if web else []) + (self.mcp["tools"] if self.mcp else [])
+        return (["--allowedTools", *allowed] if allowed else []) + (["--mcp-config", mcp_path] if self.mcp else [])
 
     def _prompt(self, system: str, user: str, schema: dict | None) -> str:
         parts = [system.strip(), "", user.strip()]
@@ -176,9 +188,13 @@ class LLM:
                 schema_file.write_text(json.dumps(schema), encoding="utf-8")
             out_file = tmp / "answer.txt"
             prompt = self._last_prompt = self._prompt(system, user, schema)
-            cmd =[exe] + CLI_FLAGS[name](str(schema_file) if schema else None, str(out_file), web, prompt)
+            mcp_file = tmp / "mcp.json"
+            if self.mcp:
+                mcp_file.write_text(json.dumps({"mcpServers": self.mcp["servers"]}), encoding="utf-8")
+            cmd = [exe] + CLI_FLAGS[name](str(schema_file) if schema else None, str(out_file), web, prompt)
+            cmd += self._tool_flags(name, web, str(mcp_file))
             proc = subprocess.run(cmd, input=prompt if name in STDIN_PROMPT else "", capture_output=True,
-                                  text=True, encoding="utf-8", errors="replace", cwd=tmp, timeout=CLI_TIMEOUT)
+                                  text=True, encoding="utf-8", errors="replace", cwd=tmp, timeout=self.timeout)
             blob = f"{proc.stdout}\n{proc.stderr}".lower()
             if proc.returncode != 0:
                 why = "usage limit" if any(h in blob for h in LIMIT_HINTS) else f"exit code {proc.returncode}"

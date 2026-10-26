@@ -35,3 +35,4 @@ Thumbs.db
 web/node_modules/
 web/dist/
 web/*.tsbuildinfo
+data/cache/

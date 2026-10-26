@@ -1,10 +1,10 @@
 import {
-  Activity, BarChart3, Database, FileText, FlaskConical, LayoutDashboard, ScrollText, SquareTerminal,
+  Activity, BarChart3, Database, FileText, FlaskConical, LayoutDashboard, Radar, ScrollText, SquareTerminal,
   type LucideIcon,
 } from "lucide-react";
 import { CATEGORIES, type RunSummary } from "../types";
 
-export type Page = "overview" | "agents" | "data" | "loop" | "test" | "drivers" | "ledger" | "report";
+export type Page = "overview" | "agents" | "data" | "loop" | "test" | "drivers" | "ledger" | "report" | "scout";
 
 export const PAGES: { id: Page; label: string; icon: LucideIcon; blurb: string }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard, blurb: "Headline results and the live state of every agent." },
@@ -15,6 +15,7 @@ export const PAGES: { id: Page; label: string; icon: LucideIcon; blurb: string }
   { id: "drivers", label: "Drivers", icon: BarChart3, blurb: "What the final model relies on to forecast tomorrow." },
   { id: "ledger", label: "Ledger", icon: ScrollText, blurb: "Every report and decision, exactly as the agents wrote it." },
   { id: "report", label: "Summary", icon: FileText, blurb: "Results tables ready for the report." },
+  { id: "scout", label: "Source scout", icon: Radar, blurb: "Ask an agent what is polluting a station right now: crop fires, mapped sources and this week's news." },
 ];
 
 const STATUS: Record<RunSummary["status"], string> = { running: "running", done: "finished", halted: "stopped by guard", error: "failed" };

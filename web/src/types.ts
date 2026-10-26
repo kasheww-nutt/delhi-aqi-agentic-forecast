@@ -80,3 +80,14 @@ export interface StationForecast {
 }
 
 export const CATEGORIES = ["Good", "Satisfactory", "Moderate", "Poor", "Very Poor", "Severe"] as const;
+
+export interface ScoutRun {
+  id: string;
+  status: "running" | "done" | "error";
+  station: string;
+  started: number | null;
+  finished: number | null;
+  brief: string | null;
+  error: string | null;
+  events: LedgerEvent[];
+}

@@ -32,7 +32,7 @@ def test_missing_cli_falls_back_cleanly(tmp_path):
 def test_cached_answer_is_reused_without_calling_a_cli(tmp_path):
     led = Ledger("t", runs_dir=tmp_path)
     first = LLM({"enabled": True, "backend": "cli", "cli": []}, led)
-    key_args = ("sys", "user", None, False)
+    key_args = ("sys", "user", None, False, None)  # system, user, schema, web, mcp
     import hashlib
     key = hashlib.sha256(json.dumps(["cli", *key_args]).encode()).hexdigest()
     (led.dir / "llm_cache.json").write_text(json.dumps({key: "cached words"}))

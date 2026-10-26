@@ -16,3 +16,4 @@ cdsapi>=0.7
 xarray>=2024.1
 netCDF4>=1.6
 pytest>=8.0
+mcp>=2.3

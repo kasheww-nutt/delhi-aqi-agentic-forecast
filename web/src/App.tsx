@@ -13,6 +13,7 @@ import { LedgerView } from "./views/LedgerView";
 import { LoopView } from "./views/LoopView";
 import { OverviewView } from "./views/OverviewView";
 import { ReportView } from "./views/ReportView";
+import { ScoutView } from "./views/ScoutView";
 import { TestView } from "./views/TestView";
 
 const STATUS: Record<RunSummary["status"], string> = {
@@ -73,7 +74,12 @@ export default function App() {
       <div className="content">
         <Header pageLabel={meta.label} runs={runs} selected={runId} onSelect={setSelected} theme={theme} onTheme={toggleTheme} />
         <main className="page" id="main">
-          {!run ? (
+          {page === "scout" ? (
+            <>
+              <div className="page-head"><div><h1>{meta.label}</h1><p>{meta.blurb}</p></div></div>
+              <div className="panel" key={`scout-${theme}`}><ScoutView /></div>
+            </>
+          ) : !run ? (
             <div className="empty">
               {runs === undefined ? "Connecting to the pipeline API…" : "No runs yet. Start one with New run."}
             </div>

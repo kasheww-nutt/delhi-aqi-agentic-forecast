@@ -25,7 +25,7 @@ function Line(props: { ts?: number; tone?: string; children: React.ReactNode }) 
   );
 }
 
-function EventLines(props: { e: LedgerEvent }) {
+export function EventLines(props: { e: LedgerEvent }) {
   const e = props.e;
   if (e.status === "start") return <Line ts={e.ts} tone="dim">▶ started</Line>;
   if (e.status === "done") return <Line ts={e.ts} tone="ok">✓ done{typeof e.seconds === "number" ? ` in ${e.seconds}s` : ""}</Line>;

@@ -59,7 +59,7 @@ def spec():
 
 @app.get("/api/runs")
 def runs():
-    found = [p for p in RUNS.glob("*") if (p / "ledger.jsonl").exists()] if RUNS.exists() else []
+    found = [p for p in RUNS.glob("*") if (p / "ledger.jsonl").exists() and not p.name.startswith("scout-")] if RUNS.exists() else []
     return [_summary(p) for p in sorted(found, key=lambda p: p.stat().st_mtime, reverse=True)]
 
 
@@ -146,6 +146,49 @@ def start_run(body: NewRun):
     cmd += ["--leaky-demo"] if body.leaky_demo else []
     cmd += ["--no-llm"] if body.no_llm else []
     subprocess.Popen(cmd, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return {"id": run_id}
+
+
+@app.get("/api/scout/stations")
+def scout_stations():
+    daily = sorted((p for p in RUNS.glob("*") if (p / "daily.parquet").exists()), key=lambda p: p.stat().st_mtime)
+    if not daily:
+        return []
+    names = pd.read_parquet(daily[-1] / "daily.parquet", columns=["station"])["station"].astype(str).unique()
+    # "Anand_Vihar_Delhi_DPCC" -> "Anand Vihar": the scout geocodes the plain name
+    return sorted({re.sub(r"^\d+\s+|\s*(Delhi|DPCC|CPCB|IMD|IITM)(\s|$).*", "", n.replace("_", " ")).strip() for n in names})
+
+
+def _scout(d: Path) -> dict:
+    events = read_events(d / "ledger.jsonl")
+    info = next((e for e in events if e["node"] == "source_scout" and e["status"] == "info"), None)
+    error = next((e for e in events if e["status"] == "error"), None)
+    last = events[-1] if events else {}
+    status = "error" if error else "done" if last.get("status") == "done" else "running"
+    return {"id": d.name, "status": status, "station": events[0]["summary"].removeprefix("scouting ") if events else "",
+            "started": events[0]["ts"] if events else None, "finished": last.get("ts") if status != "running" else None,
+            "brief": info.get("brief") if info else None, "error": error["summary"] if error else None,
+            "events": events}
+
+
+@app.get("/api/scout")
+def scouts():
+    found = sorted(RUNS.glob("scout-*"), key=lambda p: p.stat().st_mtime, reverse=True) if RUNS.exists() else []
+    return [_scout(p) for p in found if (p / "ledger.jsonl").exists()][:20]
+
+
+class NewScout(BaseModel):
+    station: str
+
+
+@app.post("/api/scout")
+def start_scout(body: NewScout):
+    station = body.station.strip()
+    if not re.fullmatch(r"[A-Za-z0-9 .,'()\-]{2,60}", station):
+        raise HTTPException(400, "station name should be plain text")
+    run_id = "scout-" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    subprocess.Popen([sys.executable, "-m", "aqi.scout", "--run-id", run_id, station], cwd=ROOT / "src",
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return {"id": run_id}
 
 
