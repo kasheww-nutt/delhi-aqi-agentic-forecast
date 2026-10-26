@@ -52,8 +52,13 @@ python scripts/fetch_era5_blh.py                  # ERA5 boundary-layer height (
 python scripts/fetch_cams.py --start 2018-01 --end 2025-12   # CAMS forecasts, needs ~/.cdsapirc (~2.5 h)
 ```
 
-The LLM-assisted agents use Claude through the Anthropic SDK (`ANTHROPIC_API_KEY`). Without credentials they
-fall back to rule-based behaviour, and the ledger records which path ran.
+The LLM-assisted agents (schema mapping, EDA notes, critic, explainer) use the coding-agent CLIs already
+logged in on the machine, run headless on your subscriptions with no API bill: Claude Code (`claude -p`),
+Gemini CLI, Codex (`codex exec`) and agy, tried in the order set by `llm.cli` in the config, moving to the next
+one when a CLI fails or hits its usage limit. Each call runs in an empty temporary folder in read-only mode;
+answers must match the agent's JSON schema and allowed values or they are retried, then dropped. Set
+`llm.backend: api` to use the Anthropic API instead (`ANTHROPIC_API_KEY`). When nothing answers, every agent
+falls back to rule-based behaviour, and the ledger records which CLI (or rule) made each decision.
 
 ## Run
 

@@ -149,7 +149,7 @@ class Mapper:
             if not guess:
                 self.ignored[header] = "no canonical match" + ("" if self.llm else " (no LLM available)")
                 return None
-            var, unit, how = S.BY_NAME[guess["canonical"]], guess["unit"], "llm"
+            var, unit, how = S.BY_NAME[guess["canonical"]], guess["unit"], f"llm ({self.llm.answered_by})"
         unit = unit or S.unit_in_header(header)
         conv = S.converter(var, unit)
         if conv is None:

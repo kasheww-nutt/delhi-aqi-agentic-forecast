@@ -55,9 +55,9 @@ def run(state: dict, ledger: Ledger) -> dict:
     llm = LLM(state["config"]["llm"], ledger)
     notes = llm.ask(NARRATOR, json.dumps(stats, default=str))
     if notes:
-        ledger.artifact("eda_notes.md").write_text(notes)
+        ledger.artifact("eda_notes.md").write_text(notes, encoding="utf-8")
     ledger.log("eda", "info",
                f"peak month {int(monthly.idxmax())}, winter peak hour {int(winter.idxmax())}:00 IST",
-               narrated_by="llm" if notes else f"none ({llm.disabled_reason})",
+               narrated_by=f"llm ({llm.answered_by})" if notes else f"none ({llm.disabled_reason})",
                artifacts=["eda_overview.png", "eda_stats.json"] + (["eda_notes.md"] if notes else []))
     return {}

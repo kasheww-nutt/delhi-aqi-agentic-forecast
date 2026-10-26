@@ -42,9 +42,11 @@ def run(state: dict, ledger: Ledger) -> dict:
     plt.close(fig)
     imp.round(4).to_csv(ledger.artifact("shap_importance.csv"))
 
-    notes = LLM(state["config"]["llm"], ledger).ask(NARRATOR, json.dumps(imp.head(15).round(4).to_dict()))
+    llm = LLM(state["config"]["llm"], ledger)
+    notes = llm.ask(NARRATOR, json.dumps(imp.head(15).round(4).to_dict()))
     if notes:
-        ledger.artifact("explainer_notes.md").write_text(notes)
+        ledger.artifact("explainer_notes.md").write_text(notes, encoding="utf-8")
     ledger.log("explainer", "info", f"top drivers: {', '.join(imp.index[:5])}",
+               narrated_by=f"llm ({llm.answered_by})" if notes else f"none ({llm.disabled_reason})",
                artifacts=["shap_importance.png"] + (["explainer_notes.md"] if notes else []))
     return {}

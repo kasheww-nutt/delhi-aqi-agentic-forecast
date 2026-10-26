@@ -104,7 +104,7 @@ def run(state: dict, ledger: Ledger) -> dict:
         llm = LLM(state["config"]["llm"], ledger)
         decision = llm.ask(SYSTEM, json.dumps(summary, default=str), schema)
         if decision and decision.get("action") in allowed:
-            decision["by"] = "llm"
+            decision["by"] = f"llm ({llm.answered_by})"
         else:
             decision = {**rule_based(state), "by": f"rule (llm: {llm.disabled_reason or 'invalid answer'})"}
 

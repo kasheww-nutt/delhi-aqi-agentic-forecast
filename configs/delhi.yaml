@@ -52,6 +52,8 @@ loop:
   primary_metric: macro_f1
 
 llm:
-  enabled: true                          # falls back to the rule-based critic without credentials
-  model: claude-opus-5-5
-  effort: medium
+  enabled: true                          # agents fall back to rules when no LLM answers
+  backend: cli                           # cli = installed coding-agent CLIs (subscription); api = Anthropic API key
+  cli: [claude, gemini, codex, agy]      # tried in this order; the next one is used on failure or usage limit
+  model: claude-opus-5-5                 # api backend only
+  effort: medium                         # api backend only
