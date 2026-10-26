@@ -142,8 +142,8 @@ class LLM:
                     errors.append(f"{name}: {e}")
                     self._log_call(name, t0, schema, web, error=errors[-1])
                     continue
-                except RuntimeError as e:
-                    errors.append(f"{name}: {e}")
+                except (RuntimeError, OSError) as e:  # a CLI problem must never stop the pipeline
+                    errors.append(f"{name}: {type(e).__name__}: {e}"[:200])
                     self._log_call(name, t0, schema, web, error=errors[-1])
                     break
             self._spent.add(name)
@@ -167,7 +167,9 @@ class LLM:
         return "\n".join(parts)
 
     def _run_cli(self, name: str, exe: str, system: str, user: str, schema: dict | None, web: bool):
-        with tempfile.TemporaryDirectory(prefix="aqi-llm-") as tmp:   # empty folder: no project files in reach
+        # Empty folder: no project files in reach. On Windows the CLI can still hold it open when we leave,
+        # so a failed cleanup is ignored (the OS temp cleaner removes it later).
+        with tempfile.TemporaryDirectory(prefix="aqi-llm-", ignore_cleanup_errors=True) as tmp:
             tmp = Path(tmp)
             schema_file = tmp / "schema.json"
             if schema:
