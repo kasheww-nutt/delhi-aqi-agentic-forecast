@@ -1,13 +1,11 @@
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { reports, splitYears } from "../ledger";
+import { cssVar } from "../theme";
 import type { CriticDecision, LedgerEvent, Scores } from "../types";
 
-const MODEL_COLOUR: Record<string, string> = {
-  persistence: "#5c6862",
-  logreg: "#9cc64b",
-  random_forest: "#ee8f34",
-  lightgbm: "#1f5e63",
-};
+// AQI hues are reserved for categories, so models get neutrals and the accent goes to LightGBM.
+const modelColour = (m: string) =>
+  cssVar(({ persistence: "--faint", logreg: "--muted", random_forest: "--ink", lightgbm: "--signal" } as Record<string, string>)[m] ?? "--ink");
 
 export function LoopView(props: { events: LedgerEvent[] }) {
   const evals = reports(props.events, "evaluator");
@@ -34,14 +32,15 @@ export function LoopView(props: { events: LedgerEvent[] }) {
         <div style={{ height: 260 }}>
           <ResponsiveContainer>
             <LineChart data={series} margin={{ top: 8, right: 16, bottom: 0, left: -12 }}>
-              <CartesianGrid stroke="#c9cec6" strokeDasharray="2 4" />
-              <XAxis dataKey="iteration" tick={{ fontSize: 12 }} allowDecimals={false} />
-              <YAxis domain={["auto", "auto"]} tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(v: number) => v.toFixed(3)} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <CartesianGrid stroke={cssVar("--rule")} strokeDasharray="2 4" />
+              <XAxis dataKey="iteration" tick={{ fontSize: 13, fill: cssVar("--muted") }} stroke={cssVar("--rule")} allowDecimals={false} />
+              <YAxis domain={["auto", "auto"]} tick={{ fontSize: 13, fill: cssVar("--muted") }} stroke={cssVar("--rule")} />
+              <Tooltip formatter={(v: number) => v.toFixed(3)}
+                contentStyle={{ background: "var(--raised)", border: "1px solid var(--rule)", borderRadius: 10, color: "var(--ink)" }} />
+              <Legend wrapperStyle={{ fontSize: 13, color: "var(--muted)" }} />
               {models.map((m) => (
-                <Line key={m} type="monotone" dataKey={m} stroke={MODEL_COLOUR[m] ?? "#1b2220"} strokeWidth={2}
-                  strokeDasharray={m === "persistence" ? "5 4" : undefined} dot={{ r: 3 }} isAnimationActive={false} />
+                <Line key={m} type="monotone" dataKey={m} stroke={modelColour(m)} strokeWidth={m === "lightgbm" ? 3 : 2}
+                  strokeDasharray={m === "persistence" ? "5 4" : undefined} dot={{ r: 4 }} isAnimationActive={false} />
               ))}
             </LineChart>
           </ResponsiveContainer>

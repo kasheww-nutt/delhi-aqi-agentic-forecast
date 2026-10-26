@@ -42,7 +42,7 @@ def run(state: dict, ledger: Ledger) -> dict:
     plt.close(fig)
     imp.round(4).to_csv(ledger.artifact("shap_importance.csv"))
 
-    llm = LLM(state["config"]["llm"], ledger)
+    llm = LLM(state["config"]["llm"], ledger, "explainer")
     notes = llm.ask(NARRATOR, json.dumps(imp.head(15).round(4).to_dict()))
     if notes:
         ledger.artifact("explainer_notes.md").write_text(notes, encoding="utf-8")

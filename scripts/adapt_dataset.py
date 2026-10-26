@@ -34,7 +34,7 @@ def main() -> int:
 
     base = load_config()
     ledger = Ledger(f"adapt-{args.name}")
-    llm = None if args.no_llm else LLM(base["llm"], ledger)
+    llm = None if args.no_llm else LLM(base["llm"], ledger, "schema_adapter")
     try:
         frame, report = adapt(args.path, args.city, llm)
         settings = suggest_settings(frame, args.city)

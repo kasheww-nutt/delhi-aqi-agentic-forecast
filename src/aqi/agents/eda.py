@@ -52,7 +52,7 @@ def run(state: dict, ledger: Ledger) -> dict:
     }
     ledger.artifact("eda_stats.json").write_text(json.dumps(stats, indent=2, default=str))
 
-    llm = LLM(state["config"]["llm"], ledger)
+    llm = LLM(state["config"]["llm"], ledger, "eda")
     notes = llm.ask(NARRATOR, json.dumps(stats, default=str))
     if notes:
         ledger.artifact("eda_notes.md").write_text(notes, encoding="utf-8")

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { api, usePolling, useResource } from "./api";
-import { RunRail } from "./components/RunRail";
+import { TopBar } from "./components/TopBar";
 import { nodeStatus } from "./ledger";
+import { useTheme } from "./theme";
 import type { RunSummary } from "./types";
+import { AgentsView } from "./views/AgentsView";
 import { DataView } from "./views/DataView";
 import { DriversView } from "./views/DriversView";
 import { LedgerView } from "./views/LedgerView";
@@ -13,6 +15,7 @@ import { TestView } from "./views/TestView";
 
 const TABS = [
   { id: "overview", label: "Overview" },
+  { id: "agents", label: "Agent terminals" },
   { id: "data", label: "Data" },
   { id: "loop", label: "Training" },
   { id: "test", label: "Test year" },
@@ -30,6 +33,7 @@ const STATUS_PILL: Record<RunSummary["status"], string> = {
 };
 
 export default function App() {
+  const [theme, toggleTheme] = useTheme();
   const spec = useResource(api.spec, []);
   const [selected, setSelected] = useState<string | null>(() => decodeURIComponent(location.hash.slice(1)) || null);
   const runs = usePolling(api.runs, [], true, 3000);
@@ -51,24 +55,25 @@ export default function App() {
   }, [runId]);
 
   const status = spec && events ? nodeStatus(spec, events) : null;
+  const llmCalls = events?.filter((e) => e.status === "llm").length ?? 0;
   const openAgent = (node: string) => {
     setAgent(node);
     setTab("ledger");
   };
 
   return (
-    <div className="shell">
-      <RunRail runs={runs} selected={runId} onSelect={setSelected} />
+    <>
+      <TopBar runs={runs} selected={runId} onSelect={setSelected} theme={theme} onTheme={toggleTheme} />
       <main className="main">
         {!run ? (
           <div className="empty" style={{ marginTop: 40 }}>
-            {runs === undefined ? "Connecting to the pipeline API…" : "No runs yet. Start one from the panel on the left."}
+            {runs === undefined ? "Connecting to the pipeline API…" : "No runs yet. Start one with New run."}
           </div>
         ) : (
           <>
             <header className="head">
               <div>
-                <p className="eyebrow">Next-day CPCB AQI category · Delhi</p>
+                <p className="eyebrow">Next-day CPCB AQI category · {run.dataset}</p>
                 <h1>Tomorrow's air, forecast today</h1>
               </div>
               <div className="run-tag">
@@ -84,14 +89,17 @@ export default function App() {
               {TABS.map((t) => (
                 <button key={t.id} role="tab" className="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}>
                   {t.label}
+                  {t.id === "agents" && llmCalls > 0 && <span className="count">{llmCalls} CLI</span>}
                 </button>
               ))}
             </nav>
 
-            <div className="panel" role="tabpanel">
-              {!events || !spec ? <p className="muted">Loading the ledger…</p> : (
+            {/* keyed on the theme so charts re-read their colours when it changes */}
+            <div className="panel" role="tabpanel" key={theme}>
+              {!events || !spec || !status ? <p className="muted">Loading the ledger…</p> : (
                 <>
                   {tab === "overview" && <OverviewView run={run} events={events} status={status} onOpenAgent={openAgent} />}
+                  {tab === "agents" && <AgentsView spec={spec} events={events} status={status} />}
                   {tab === "data" && <DataView runId={run.id} events={events} />}
                   {tab === "loop" && <LoopView events={events} />}
                   {tab === "test" && <TestView runId={run.id} events={events} />}
@@ -104,6 +112,6 @@ export default function App() {
           </>
         )}
       </main>
-    </div>
+    </>
   );
 }

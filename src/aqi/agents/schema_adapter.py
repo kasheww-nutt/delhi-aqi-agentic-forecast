@@ -368,7 +368,7 @@ def run(state: dict, ledger: Ledger) -> dict:
         return {"granularity": report.get("granularity", "hourly"),
                 "paths": {**state.get("paths", {}), "canonical": str(path)}}
 
-    llm = LLM(state["config"]["llm"], ledger)
+    llm = LLM(state["config"]["llm"], ledger, "schema_adapter")
     frame, report = adapt(src["path"], src.get("city"), llm, log=lambda m: ledger.log("schema_adapter", "info", m))
     out = ledger.dir / "canonical.parquet"
     frame.to_parquet(out, index=False)

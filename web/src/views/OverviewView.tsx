@@ -50,7 +50,8 @@ export function OverviewView(props: {
             <Stat value={`${(results[model].within_one_category * 100).toFixed(0)}%`} label="within one category" />
           </>
         ) : (
-          <Stat value="—" label={`${years.test} test`} note="scored once, after the training loop stops" />
+          <Stat value="—" label={years.test === "test year" ? "Test year" : `${years.test} test`}
+            note="scored once, after the training loop stops" />
         )}
         <Stat value={String(iterations || "—")} label="training iterations" />
         {split?.sizes && (

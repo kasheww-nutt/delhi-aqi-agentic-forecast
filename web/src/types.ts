@@ -46,7 +46,7 @@ export interface SpecNode {
 export interface LedgerEvent {
   ts: number;
   node: string;
-  status: "start" | "info" | "done" | "halt" | "halted" | "error";
+  status: "start" | "info" | "done" | "halt" | "halted" | "error" | "llm";
   summary?: string;
   seconds?: number;
   [key: string]: unknown;

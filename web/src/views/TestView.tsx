@@ -101,7 +101,8 @@ function Confusion(props: { matrix: number[][]; model: string }) {
               const share = v / total;
               return (
                 <span key={`${i}-${j}`} className={`cell${i === j ? " diag" : ""}`}
-                  style={{ background: `rgba(31, 94, 99, ${0.06 + share * 0.85})`, color: share > 0.45 ? "#f3f4ef" : "inherit" }}
+                  style={{ background: `color-mix(in srgb, var(--signal) ${Math.round(6 + share * 80)}%, transparent)`,
+                    color: share > 0.45 ? "var(--surface)" : "inherit", fontWeight: share > 0.45 ? 600 : 400 }}
                   title={`${CATEGORIES[i]} → ${CATEGORIES[j]}: ${v} (${(share * 100).toFixed(0)}%)`}>
                   {v}
                 </span>

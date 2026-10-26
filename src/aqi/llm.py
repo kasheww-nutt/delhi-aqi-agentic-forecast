@@ -19,6 +19,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 
 from .config import ROOT
@@ -80,9 +81,10 @@ def _reply_text(name: str, stdout: str, out_file: Path) -> str:
 
 
 class LLM:
-    def __init__(self, cfg: dict, ledger: Ledger):
+    def __init__(self, cfg: dict, ledger: Ledger, agent: str = "llm"):
         self.cfg = cfg
         self.ledger = ledger
+        self.agent = agent  # the ledger node each CLI call is logged under (shown in the agent terminals)
         self.backend = cfg.get("backend", "cli")
         self.cache_path = ledger.dir / "llm_cache.json"
         replay = os.environ.get("AQI_REPLAY_FROM")
@@ -95,6 +97,7 @@ class LLM:
         self.answered_by: str | None = None
         self._client = None
         self._spent: set[str] = set()  # CLIs that failed or hit a limit during this run
+        self._last_prompt: str | None = None
 
     # ── public ────────────────────────────────────────────────────────────
     def ask(self, system: str, user: str, schema: dict | None = None, web: bool = False) -> dict | str | None:
@@ -125,22 +128,36 @@ class LLM:
                 self._spent.add(name)
                 continue
             for attempt in range(2):  # one retry when the reply is not valid JSON
+                t0 = time.time()
                 try:
                     result = self._run_cli(name, exe, system, user, schema, web)
                     self.answered_by, self.disabled_reason = name, None
+                    self._log_call(name, t0, schema, web, reply=result)
                     return result
                 except subprocess.TimeoutExpired:
                     errors.append(f"{name}: timed out after {CLI_TIMEOUT}s")
+                    self._log_call(name, t0, schema, web, error=errors[-1])
                     break
                 except (ValueError, json.JSONDecodeError) as e:
                     errors.append(f"{name}: {e}")
+                    self._log_call(name, t0, schema, web, error=errors[-1])
                     continue
                 except RuntimeError as e:
                     errors.append(f"{name}: {e}")
+                    self._log_call(name, t0, schema, web, error=errors[-1])
                     break
             self._spent.add(name)
         self.disabled_reason = "no CLI answered (" + "; ".join(errors)[:300] + ")"
         return None
+
+    def _log_call(self, name: str, t0: float, schema: dict | None, web: bool, reply=None, error: str | None = None):
+        """One ledger event per CLI call: the command line (prompt elided), the prompt and the raw answer."""
+        flags = CLI_FLAGS[name]("<schema.json>" if schema else None, "<answer.txt>", web, "<prompt>")
+        reply_text = json.dumps(reply, indent=2, ensure_ascii=False) if isinstance(reply, dict) else reply
+        self.ledger.log(self.agent, "llm", f"{name} {'answered' if error is None else 'failed'} in {time.time() - t0:.0f}s",
+                        cli=name, command=" ".join([name, *flags]), prompt=(self._last_prompt or "")[:6000],
+                        reply=(reply_text or "")[:6000], error=error, seconds=round(time.time() - t0, 1),
+                        stdin=name in STDIN_PROMPT)
 
     def _prompt(self, system: str, user: str, schema: dict | None) -> str:
         parts = [system.strip(), "", user.strip()]
@@ -156,8 +173,8 @@ class LLM:
             if schema:
                 schema_file.write_text(json.dumps(schema), encoding="utf-8")
             out_file = tmp / "answer.txt"
-            prompt = self._prompt(system, user, schema)
-            cmd = [exe] + CLI_FLAGS[name](str(schema_file) if schema else None, str(out_file), web, prompt)
+            prompt = self._last_prompt = self._prompt(system, user, schema)
+            cmd =[exe] + CLI_FLAGS[name](str(schema_file) if schema else None, str(out_file), web, prompt)
             proc = subprocess.run(cmd, input=prompt if name in STDIN_PROMPT else "", capture_output=True,
                                   text=True, encoding="utf-8", errors="replace", cwd=tmp, timeout=CLI_TIMEOUT)
             blob = f"{proc.stdout}\n{proc.stderr}".lower()

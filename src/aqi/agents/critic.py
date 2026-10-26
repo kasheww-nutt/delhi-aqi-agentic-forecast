@@ -101,7 +101,7 @@ def run(state: dict, ledger: Ledger) -> dict:
             "category_order": ["Good", "Satisfactory", "Moderate", "Poor", "Very Poor", "Severe"],
             "allowed_actions": allowed,
         }
-        llm = LLM(state["config"]["llm"], ledger)
+        llm = LLM(state["config"]["llm"], ledger, "critic")
         decision = llm.ask(SYSTEM, json.dumps(summary, default=str), schema)
         if decision and decision.get("action") in allowed:
             decision["by"] = f"llm ({llm.answered_by})"
