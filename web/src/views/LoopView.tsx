@@ -5,7 +5,7 @@ import type { CriticDecision, LedgerEvent, Scores } from "../types";
 
 // AQI hues are reserved for categories, so models get neutrals and the accent goes to LightGBM.
 const modelColour = (m: string) =>
-  cssVar(({ persistence: "--faint", logreg: "--muted", random_forest: "--ink", lightgbm: "--signal" } as Record<string, string>)[m] ?? "--ink");
+  cssVar(({ persistence: "--faint", logreg: "--muted", random_forest: "--ink", lightgbm: "--accent" } as Record<string, string>)[m] ?? "--ink");
 
 export function LoopView(props: { events: LedgerEvent[] }) {
   const evals = reports(props.events, "evaluator");
@@ -32,11 +32,11 @@ export function LoopView(props: { events: LedgerEvent[] }) {
         <div style={{ height: 260 }}>
           <ResponsiveContainer>
             <LineChart data={series} margin={{ top: 8, right: 16, bottom: 0, left: -12 }}>
-              <CartesianGrid stroke={cssVar("--rule")} strokeDasharray="2 4" />
-              <XAxis dataKey="iteration" tick={{ fontSize: 13, fill: cssVar("--muted") }} stroke={cssVar("--rule")} allowDecimals={false} />
-              <YAxis domain={["auto", "auto"]} tick={{ fontSize: 13, fill: cssVar("--muted") }} stroke={cssVar("--rule")} />
+              <CartesianGrid stroke={cssVar("--line-strong")} strokeDasharray="2 4" />
+              <XAxis dataKey="iteration" tick={{ fontSize: 13, fill: cssVar("--muted") }} stroke={cssVar("--line-strong")} allowDecimals={false} />
+              <YAxis domain={["auto", "auto"]} tick={{ fontSize: 13, fill: cssVar("--muted") }} stroke={cssVar("--line-strong")} />
               <Tooltip formatter={(v: number) => v.toFixed(3)}
-                contentStyle={{ background: "var(--raised)", border: "1px solid var(--rule)", borderRadius: 10, color: "var(--ink)" }} />
+                contentStyle={{ background: "var(--panel-solid)", border: "1px solid var(--line-strong)", borderRadius: 10, color: "var(--ink)" }} />
               <Legend wrapperStyle={{ fontSize: 13, color: "var(--muted)" }} />
               {models.map((m) => (
                 <Line key={m} type="monotone" dataKey={m} stroke={modelColour(m)} strokeWidth={m === "lightgbm" ? 3 : 2}

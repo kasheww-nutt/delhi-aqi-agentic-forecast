@@ -12,7 +12,7 @@ const GROUP_COLOUR: [RegExp, string, string][] = [
   [/^city_|station_minus_city/, "#5b8def", "City context"],
   [/^(AT|RH|WS|WD|RF|SR|BP)_/, "#9b6bd6", "Station weather"],
   [/_t1$|^lockdown/, "#8894a8", "Calendar"],
-  [/.*/, "--signal", "Pollutant history"],
+  [/.*/, "--accent", "Pollutant history"],
 ];
 const colourOf = (c: string) => (c.startsWith("--") ? cssVar(c) : c);
 const groupOf = (f: string) => GROUP_COLOUR.find(([re]) => re.test(f))!;
@@ -42,11 +42,11 @@ export function DriversView(props: { runId: string; events: LedgerEvent[] }) {
         <div style={{ height: 26 * data.length + 40 }}>
           <ResponsiveContainer>
             <BarChart data={data} layout="vertical" margin={{ left: 40, right: 20 }}>
-              <XAxis type="number" tick={{ fontSize: 13, fill: cssVar("--muted") }} stroke={cssVar("--rule")} />
-              <YAxis type="category" dataKey="feature" width={170} interval={0} stroke={cssVar("--rule")}
-                tick={{ fontSize: 13, fontFamily: "IBM Plex Mono", fill: cssVar("--ink") }} />
-              <Tooltip formatter={(v: number) => v.toFixed(4)} cursor={{ fill: "var(--hairline)" }}
-                contentStyle={{ background: "var(--raised)", border: "1px solid var(--rule)", borderRadius: 10, color: "var(--ink)" }} />
+              <XAxis type="number" tick={{ fontSize: 13, fill: cssVar("--muted") }} stroke={cssVar("--line-strong")} />
+              <YAxis type="category" dataKey="feature" width={170} interval={0} stroke={cssVar("--line-strong")}
+                tick={{ fontSize: 13, fontFamily: "Fira Code", fill: cssVar("--ink") }} />
+              <Tooltip formatter={(v: number) => v.toFixed(4)} cursor={{ fill: "var(--hover)" }}
+                contentStyle={{ background: "var(--panel-solid)", border: "1px solid var(--line-strong)", borderRadius: 10, color: "var(--ink)" }} />
               <Bar dataKey="importance" isAnimationActive={false}
                 shape={(p: any) => <rect x={p.x} y={p.y + 2} width={p.width} height={p.height - 4} fill={p.payload.colour} rx={2} />} />
             </BarChart>

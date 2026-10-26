@@ -25,24 +25,35 @@ const STATUS: Record<RunSummary["status"], string> = {
 export default function App() {
   const [theme, toggleTheme] = useTheme();
   const spec = useResource(api.spec, []);
-  const [selected, setSelected] = useState<string | null>(() => decodeURIComponent(location.hash.slice(1)) || null);
+  // URL hash = "#<run>/<page>", so any page of any run can be bookmarked or shared.
+  const fromHash = () => {
+    const [r, p] = decodeURIComponent(location.hash.slice(1)).split("/");
+    return { run: r || null, page: (PAGES.some((x) => x.id === p) ? p : "overview") as Page };
+  };
+  const [selected, setSelected] = useState<string | null>(() => fromHash().run);
   const runs = usePolling(api.runs, [], true, 3000);
   const run = runs?.find((r) => r.id === selected) ?? runs?.[0];
   const runId = run?.id ?? null;
   const events = usePolling(() => (runId ? api.events(runId) : Promise.resolve([])), [runId], run?.status === "running");
-  const [page, setPage] = useState<Page>("overview");
+  const [page, setPage] = useState<Page>(() => fromHash().page);
   const [agent, setAgent] = useState<string | null>(null);
 
   useEffect(() => {
-    const onHash = () => setSelected(decodeURIComponent(location.hash.slice(1)) || null);
+    const onHash = () => {
+      const h = fromHash();
+      setSelected(h.run);
+      setPage(h.page);
+    };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (runId) history.replaceState(null, "", `#${encodeURIComponent(runId)}`);
-    setAgent(null);
-  }, [runId]);
+    if (runId) history.replaceState(null, "", `#${encodeURIComponent(runId)}/${page}`);
+  }, [runId, page]);
+
+  useEffect(() => setAgent(null), [runId]);
 
   useEffect(() => {
     window.scrollTo({ top: 0 }); // braces: newer browsers return a Promise here, which must not become the cleanup

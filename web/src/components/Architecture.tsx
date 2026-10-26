@@ -77,7 +77,7 @@ export function Architecture(props: {
       <svg className="arch" viewBox="0 0 1240 600" role="img"
         aria-label="Pipeline architecture: dataset, schema adapter, data agents, locked split, training loop, ledger and console">
         <defs>
-          {[["", "var(--faint)"], ["-loop", "var(--signal)"], ["-lock", "var(--ink)"], ["-halt", "var(--bad)"]].map(([id, c]) => (
+          {[["", "var(--faint)"], ["-loop", "var(--accent)"], ["-lock", "var(--ink)"], ["-halt", "var(--bad)"]].map(([id, c]) => (
             <marker key={id} id={`arrow${id}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M0 0 L10 5 L0 10 z" fill={c} />
             </marker>

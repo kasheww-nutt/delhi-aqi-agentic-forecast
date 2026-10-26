@@ -110,14 +110,8 @@ export function AgentsView(props: { spec: SpecNode[]; events: LedgerEvent[]; sta
 
   return (
     <>
-      <section className="surface-head row" style={{ marginBottom: 0 }}>
-        <div>
-          <h2 style={{ fontFamily: "var(--display)", fontStretch: "112%", fontSize: 22, margin: "0 0 6px" }}>Agent terminals</h2>
-          <p className="muted" style={{ margin: 0, fontSize: 15 }}>
-            Live output of every agent. LLM agents show the exact CLI command, the prompt they sent and the raw reply
-            ({calls.length} CLI call{calls.length === 1 ? "" : "s"} in this run).
-          </p>
-        </div>
+      <section className="toolbar">
+        <p>{shown.length} agents · {calls.length} CLI call{calls.length === 1 ? "" : "s"} in this run · click a prompt or reply to open it</p>
         <div className="chips" role="group" aria-label="Filter terminals">
           {([["all", "All agents"], ["llm", "LLM agents ✦"], ["problems", "Problems"]] as const).map(([id, label]) => (
             <button key={id} className="ghost" aria-pressed={filter === id} onClick={() => setFilter(id)}>{label}</button>

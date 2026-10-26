@@ -17,6 +17,9 @@ export function DataView(props: { runId: string; events: LedgerEvent[] }) {
   const problems = (guard?.problems as string[] | undefined) ?? [];
   const decisions = (cleaner?.decisions as string[] | undefined) ?? [];
   const skipped = (features?.skipped_groups as string[] | undefined) ?? [];
+  // The agents log Python reprs; pull the names out so they read as chips, not code.
+  const allowed = [...(guard?.summary ?? "").matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  const groups = [...(features?.summary ?? "").matchAll(/'([^']+)': (\d+)/g)].map((m) => [m[1], m[2]] as const);
 
   return (
     <>
@@ -24,7 +27,17 @@ export function DataView(props: { runId: string; events: LedgerEvent[] }) {
       {guard && (
         <section className="card" style={{ borderLeft: `4px solid var(${guard.status === "halt" ? "--bad" : "--ok"})` }}>
           <h2>Leakage guard</h2>
-          <p className="lede" style={{ marginBottom: problems.length ? 10 : 0 }}>{guard.summary}</p>
+          <p className="lede" style={{ marginBottom: 0 }}>
+            {guard.status === "halt" ? guard.summary : (guard.summary ?? "").split(" (")[0] + "."}
+          </p>
+          {guard.status !== "halt" && allowed.length > 0 && (
+            <>
+              <p className="muted" style={{ margin: "12px 0 0", fontSize: 13.5 }}>
+                Features about tomorrow that are allowed because they are known today:
+              </p>
+              <div className="chip-list">{allowed.map((f) => <span key={f}>{f}</span>)}</div>
+            </>
+          )}
           {problems.length > 0 && (
             <ul className="decisions">{problems.map((p) => <li key={p}>{p}</li>)}</ul>
           )}
@@ -37,10 +50,15 @@ export function DataView(props: { runId: string; events: LedgerEvent[] }) {
           <p className="lede">{cleaner.summary}</p>
           <ul className="decisions">{decisions.map((d) => <li key={d}>{d}</li>)}</ul>
           {features && (
-            <p className="muted" style={{ margin: "14px 0 0", fontSize: 13 }}>
-              Features: {features.summary}
-              {skipped.length > 0 && ` · skipped (no data yet): ${skipped.join(", ")}`}
-            </p>
+            <>
+              <p className="muted" style={{ margin: "16px 0 0", fontSize: 13.5 }}>
+                {(features.summary ?? "").split("; groups")[0]}, by group
+                {skipped.length > 0 && ` · skipped (no data yet): ${skipped.join(", ")}`}
+              </p>
+              <div className="chip-list">
+                {groups.map(([g, n]) => <span key={g}>{g.replace(/_/g, " ")}<b>{n}</b></span>)}
+              </div>
+            </>
           )}
         </section>
       )}
