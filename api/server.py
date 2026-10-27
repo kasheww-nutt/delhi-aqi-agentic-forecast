@@ -161,7 +161,7 @@ def scout_stations():
 
 def _scout(d: Path) -> dict:
     events = read_events(d / "ledger.jsonl")
-    info = next((e for e in events if e["node"] == "source_scout" and e["status"] == "info"), None)
+    info = next((e for e in events if e["node"] == "source_scout" and e["status"] == "info" and e.get("brief")), None)
     error = next((e for e in events if e["status"] == "error"), None)
     last = events[-1] if events else {}
     status = "error" if error else "done" if last.get("status") == "done" else "running"
@@ -173,7 +173,7 @@ def _scout(d: Path) -> dict:
 
 @app.get("/api/scout")
 def scouts():
-    found = sorted(RUNS.glob("scout-*"), key=lambda p: p.stat().st_mtime, reverse=True) if RUNS.exists() else []
+    found = sorted(RUNS.glob("scout-*"), reverse=True) if RUNS.exists() else []  # ids are scout-<date>-<time>
     return [_scout(p) for p in found if (p / "ledger.jsonl").exists()][:20]
 
 

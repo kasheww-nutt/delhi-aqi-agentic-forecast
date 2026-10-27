@@ -13,6 +13,12 @@ const TOOLS = [
   ["web search", "this week's news: GRAP stage, demolition, waste fires"],
 ];
 
+// today's scouts show the time; older ones the date
+const when = (ts: number) =>
+  new Date(ts * 1000).toDateString() === new Date().toDateString()
+    ? clock(ts)
+    : new Date(ts * 1000).toLocaleDateString([], { day: "numeric", month: "short" });
+
 export function ScoutView() {
   const stations = useResource(() => api.scoutStations(), []);
   const [station, setStation] = useState("Anand Vihar");
@@ -71,7 +77,7 @@ export function ScoutView() {
               <button key={s.id} className={s.id === shown?.id ? "on" : ""} onClick={() => setPick(s.id)}>
                 <span className={`dot ${s.status}`} />
                 <span>{s.station}</span>
-                <time>{s.started ? clock(s.started) : ""}</time>
+                <time>{s.started ? when(s.started) : ""}</time>
               </button>
             ))}
           </nav>

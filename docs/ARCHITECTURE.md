@@ -68,6 +68,9 @@ Agents 4, 11 and 13 (and 1 for unknown columns) can use an LLM. All others are p
 - They are tried in the order set in the config. If one fails, times out (240 s) or hits a usage limit, the
   next one is tried.
 - Every call runs in an **empty temporary folder** in read-only or plan mode, so a CLI cannot touch the project.
+- Claude Code calls are locked down further (v1.1): `--tools` lists the only built-in tools (none for pipeline
+  agents), and `--strict-mcp-config` drops every MCP server or connected account except ones we pass. Each tool
+  call the CLI makes is logged.
 - Answers must match the agent's **JSON schema** and allowed values, or they are rejected.
 - Every answer is **cached** by a hash of the prompt in the run folder. `AQI_REPLAY_FROM=<run_id>` replays a
   finished run's decisions exactly, without calling any LLM.
@@ -103,5 +106,6 @@ Agents 4, 11 and 13 (and 1 for unknown columns) can use an LLM. All others are p
 | `src/aqi/ledger.py` | the experiment ledger |
 | `scripts/` | run the pipeline, adapt a dataset, download ERA5 and CAMS, watch a run in the terminal |
 | `api/`, `web/` | FastAPI service and React console |
-| `tests/` | 18 unit tests: AQI, leakage guard, splits, schema adapter, LLM CLI handling |
+| `tests/` | 26 unit tests: AQI, leakage guard, splits, schema adapter, LLM CLI handling, scout tools |
+| `src/aqi/scout*.py`, `scripts/scout_mcp.py` | v1.1 source scout and its MCP tool server ([SCOUT.md](SCOUT.md)) |
 | `docs/` | these documents, the results snapshot and the planning audits |

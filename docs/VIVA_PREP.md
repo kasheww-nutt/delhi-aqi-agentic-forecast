@@ -210,3 +210,46 @@ Backup: keep screenshots of each page in case the laptop or network fails.
 | Critic rules | ≤4 rounds, stop if gain < 0.01 |
 | Leakage tripwire | 97% agreement |
 | Run time | about 6–8 minutes |
+
+---
+
+## 11. Add-on (v1.1): the source scout
+
+Use this only if you present the scout. Details are in [SCOUT.md](SCOUT.md).
+
+### In one line
+
+"After the model forecasts tomorrow, a scout agent explains what is driving pollution at a station today,
+using satellite fire data, maps and this week's news, with every claim sourced."
+
+### How it works, in 5 steps
+
+1. Pick a station on the **Source scout** page.
+2. The scout starts the Claude Code CLI with our **MCP server** (3 tools) and web search.
+3. Claude decides which tools to call: `station_snapshot` (latest AQI), `fires` (NASA FIRMS crop fires),
+   `nearby_sources` (OpenStreetMap construction, industry, landfills, roads), WebSearch and WebFetch (news).
+4. It writes a brief: one-line answer, recent air quality, likely drivers with evidence, what would help, sources.
+5. Every tool call, its input and result are logged in the ledger and shown in the terminal on the page.
+
+### Likely questions
+
+- **Why doesn't the scout feed the model?** Web pages and maps describe today. Using them for past dates would
+  leak hindsight, the same leakage the whole project is designed to stop.
+- **What is MCP?** A standard way to give an LLM extra tools. We wrote one small server with 3 tools; any
+  MCP-capable CLI could use it.
+- **What is the difference between WebSearch and WebFetch?** WebSearch finds pages (titles, links, snippets).
+  WebFetch opens one page and reads it.
+- **How do you stop the CLI doing something else?** `--tools` lists the only built-in tools, `--strict-mcp-config`
+  removes every other MCP server or connected account, the folder is empty, and there's a 7-minute limit.
+- **How do you know the brief is right?** Every claim cites a tool or a link, so it can be checked. A tool that
+  fails says so instead of guessing. The brief isn't scored automatically; that's future work.
+- **What if OpenStreetMap is down?** The tool tries 3 servers for 25 seconds each, then uses a saved snapshot of
+  the map data for that station, and the brief says which date it is from.
+- **Does it change the results?** No. Macro-F1 stays 0.600. The scout adds explanation, not accuracy.
+- **What is FIRMS fire radiative power?** How much heat a fire gives off, in megawatts. Bigger fires give off
+  more smoke.
+
+### Demo
+
+Start a scout first (it takes 1–5 minutes), then talk. Show the brief, then the terminal: the CLI command,
+each `⚙ tool(...)` line, and its result. Keep a screenshot of a good run as a backup.

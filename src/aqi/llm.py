@@ -19,8 +19,10 @@ import re
 import shutil
 import subprocess
 import tempfile
+import threading
 import time
 from pathlib import Path
+from types import SimpleNamespace
 
 from .config import ROOT
 from .ledger import Ledger
@@ -34,7 +36,8 @@ except ImportError:  # pragma: no cover
 # .cmd shims and cmd.exe would re-parse quotes and symbols in arguments. agy reads no stdin; it is a
 # real .exe, so its prompt is passed as one argument (quoted by CreateProcess, not re-parsed by cmd).
 CLI_FLAGS = {
-    "claude": lambda schema, out, web, prompt: ["-p", "--output-format", "json"],  # tools added in _tool_flags
+    # stream-json: one event per line, so every tool call can be logged; tools are set in _tool_flags
+    "claude": lambda schema, out, web, prompt: ["-p", "--output-format", "stream-json", "--verbose"],
     "gemini": lambda schema, out, web, prompt: ["-p", "Answer the request given on standard input.", "-o", "json",
                                                 "--approval-mode", "plan"],
     "codex": lambda schema, out, web, prompt: ["exec", "--skip-git-repo-check", "--ephemeral", "-s", "read-only",
@@ -56,11 +59,46 @@ def _extract_json(text: str):
     return json.loads(text[start:end + 1])
 
 
+def _claude_tool_calls(stdout: str) -> list[dict]:
+    """Each tool call in a Claude Code stream-json transcript: tool name, input, and a short result."""
+    calls, by_id = [], {}
+    for line in stdout.splitlines():
+        try:
+            e = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        content = (e.get("message") or {}).get("content") if isinstance(e, dict) else None
+        for c in content if isinstance(content, list) else []:
+            if not isinstance(c, dict):
+                continue
+            if e.get("type") == "assistant" and c.get("type") == "tool_use":
+                by_id[c.get("id")] = call = {"tool": c.get("name"), "input": c.get("input"), "ok": None, "result": ""}
+                calls.append(call)
+            elif e.get("type") == "user" and c.get("type") == "tool_result" and c.get("tool_use_id") in by_id:
+                body = c.get("content")
+                text = body if isinstance(body, str) else " ".join(
+                    b.get("text", "") for b in body or [] if isinstance(b, dict))
+                call = by_id[c["tool_use_id"]]
+                call["ok"] = not c.get("is_error") and not text.lstrip().startswith('{"error"')
+                call["result"] = text[:400]
+    return calls
+
+
 def _reply_text(name: str, stdout: str, out_file: Path) -> str:
     if name == "codex":
         return out_file.read_text(encoding="utf-8") if out_file.exists() else stdout
     env = None
-    for chunk in [stdout] + [ln for ln in reversed(stdout.splitlines()) if ln.lstrip().startswith("{")]:
+    if name == "claude":  # stream-json: the answer is the "result" event, normally the last line
+        for ln in reversed(stdout.splitlines()):
+            try:
+                e = json.loads(ln)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(e, dict) and e.get("type") == "result":
+                env = e
+                break
+    chunks = [] if env is not None else [stdout] + [ln for ln in reversed(stdout.splitlines()) if ln.lstrip().startswith("{")]
+    for chunk in chunks:
         try:  # the whole output, else the last JSON line (some CLIs print warnings before it)
             env = json.loads(chunk)
             break
@@ -102,6 +140,7 @@ class LLM:
         self._client = None
         self._spent: set[str] = set()  # CLIs that failed or hit a limit during this run
         self._last_prompt: str | None = None
+        self._last_tools: list[dict] = []  # tool calls made during the latest CLI call (Claude Code only)
 
     # ── public ────────────────────────────────────────────────────────────
     def ask(self, system: str, user: str, schema: dict | None = None, web: bool = False) -> dict | str | None:
@@ -160,16 +199,22 @@ class LLM:
         flags += self._tool_flags(name, web, "<mcp.json>")
         reply_text = json.dumps(reply, indent=2, ensure_ascii=False) if isinstance(reply, dict) else reply
         self.ledger.log(self.agent, "llm", f"{name} {'answered' if error is None else 'failed'} in {time.time() - t0:.0f}s",
-                        cli=name, command=" ".join([name, *flags]), prompt=(self._last_prompt or "")[:6000],
+                        cli=name, command=" ".join([name, *(f or '""' for f in flags)]), prompt=(self._last_prompt or "")[:6000],
                         reply=(reply_text or "")[:6000], error=error, seconds=round(time.time() - t0, 1),
-                        stdin=name in STDIN_PROMPT)
+                        stdin=name in STDIN_PROMPT, tools=self._last_tools or None)
 
     def _tool_flags(self, name: str, web: bool, mcp_path: str) -> list[str]:
-        """Tools a CLI may use: web search and/or our MCP tools (an explicit allow-list, nothing else)."""
+        """Tools a CLI may use: web search and/or our MCP tools, and nothing else.
+
+        `--tools` limits the built-in tools (none at all for a plain answer), `--strict-mcp-config` drops every
+        MCP server the user has configured or connected, and `--allowedTools` pre-approves what is left."""
         if name != "claude":
             return []
-        allowed = (["WebSearch", "WebFetch"] if web else []) + (self.mcp["tools"] if self.mcp else [])
-        return (["--allowedTools", *allowed] if allowed else []) + (["--mcp-config", mcp_path] if self.mcp else [])
+        builtin = ["WebSearch", "WebFetch"] if web else []
+        allowed = builtin + (self.mcp["tools"] if self.mcp else [])
+        flags = ["--tools", ",".join(builtin), "--strict-mcp-config"]
+        flags += ["--mcp-config", mcp_path] if self.mcp else []
+        return flags + (["--allowedTools", *allowed] if allowed else [])
 
     def _prompt(self, system: str, user: str, schema: dict | None) -> str:
         parts = [system.strip(), "", user.strip()]
@@ -178,9 +223,40 @@ class LLM:
                       json.dumps(schema)]
         return "\n".join(parts)
 
+    def _run_streaming(self, cmd: list[str], prompt: str, cwd: Path) -> SimpleNamespace:
+        """Run a tool-using Claude Code call, logging each tool call the moment it starts, so the console
+        shows the agent at work instead of a silent wait. Same result shape as subprocess.run."""
+        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                text=True, encoding="utf-8", errors="replace", cwd=cwd)
+        out, err = [], []
+
+        def read_stdout():
+            for line in proc.stdout:
+                out.append(line)
+                for call in _claude_tool_calls(line):
+                    args = ", ".join(f"{k}: {json.dumps(v)}" for k, v in (call["input"] or {}).items())[:160]
+                    self.ledger.log(self.agent, "info", f"⚙ {call['tool'].split('__')[-1]}({args})",
+                                    tool=call["tool"], input=call["input"])
+
+        readers = [threading.Thread(target=read_stdout, daemon=True),
+                   threading.Thread(target=lambda: err.extend(proc.stderr), daemon=True)]
+        for t in readers:
+            t.start()
+        proc.stdin.write(prompt)
+        proc.stdin.close()
+        try:
+            proc.wait(timeout=self.timeout)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            raise
+        for t in readers:
+            t.join(timeout=5)
+        return SimpleNamespace(returncode=proc.returncode, stdout="".join(out), stderr="".join(err))
+
     def _run_cli(self, name: str, exe: str, system: str, user: str, schema: dict | None, web: bool):
         # Empty folder: no project files in reach. On Windows the CLI can still hold it open when we leave,
         # so a failed cleanup is ignored (the OS temp cleaner removes it later).
+        self._last_tools = []
         with tempfile.TemporaryDirectory(prefix="aqi-llm-", ignore_cleanup_errors=True) as tmp:
             tmp = Path(tmp)
             schema_file = tmp / "schema.json"
@@ -193,8 +269,12 @@ class LLM:
                 mcp_file.write_text(json.dumps({"mcpServers": self.mcp["servers"]}), encoding="utf-8")
             cmd = [exe] + CLI_FLAGS[name](str(schema_file) if schema else None, str(out_file), web, prompt)
             cmd += self._tool_flags(name, web, str(mcp_file))
-            proc = subprocess.run(cmd, input=prompt if name in STDIN_PROMPT else "", capture_output=True,
-                                  text=True, encoding="utf-8", errors="replace", cwd=tmp, timeout=self.timeout)
+            if name == "claude" and (web or self.mcp):
+                proc = self._run_streaming(cmd, prompt, tmp)
+            else:
+                proc = subprocess.run(cmd, input=prompt if name in STDIN_PROMPT else "", capture_output=True,
+                                      text=True, encoding="utf-8", errors="replace", cwd=tmp, timeout=self.timeout)
+            self._last_tools = _claude_tool_calls(proc.stdout) if name == "claude" else []
             blob = f"{proc.stdout}\n{proc.stderr}".lower()
             if proc.returncode != 0:
                 why = "usage limit" if any(h in blob for h in LIMIT_HINTS) else f"exit code {proc.returncode}"

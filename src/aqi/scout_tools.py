@@ -25,6 +25,7 @@ REGIONS = {  # west, south, east, north
     "delhi_ncr": (76.8, 28.3, 77.6, 28.9),
 }
 DELHI_VIEWBOX = "76.8,28.9,77.6,28.3"
+SNAPSHOT = Path(__file__).with_name("osm_snapshot.json")  # saved map answers per station, for busy days
 
 
 def _firms_key() -> str:
@@ -42,8 +43,12 @@ def _firms_key() -> str:
 def fires(start_date: str | None = None, days: int = 1, region: str = "punjab_haryana") -> dict:
     """Satellite fire detections (NASA FIRMS, VIIRS) in a region for up to 10 days from start_date."""
     days = max(1, min(int(days), 10))
-    w, s, e, n = REGIONS.get(region, REGIONS["punjab_haryana"])
+    if region not in REGIONS:
+        raise ValueError(f"unknown region '{region}'; use one of {sorted(REGIONS)}")
+    w, s, e, n = REGIONS[region]
     start = date.fromisoformat(start_date) if start_date else date.today() - timedelta(days=days - 1)
+    if start > date.today():
+        raise ValueError(f"start_date {start} is in the future")
     recent = (date.today() - start).days < 60
     product = "VIIRS_SNPP_NRT" if recent else "VIIRS_SNPP_SP"   # near-real-time vs archive
     url = f"https://firms.modaps.eosdis.nasa.gov/api/area/csv/{_firms_key()}/{product}/{w},{s},{e},{n}/{days}/{start}"
@@ -83,11 +88,30 @@ def _km(a_lat, a_lon, b_lat, b_lon) -> float:
     return math.hypot(dx, dy)
 
 
+def _slug(place: str) -> str:
+    return "".join(c if c.isalnum() else "_" for c in place.lower())
+
+
 def nearby_sources(place: str, radius_km: float = 2.0) -> dict:
-    """Mapped pollution sources near a place: construction sites, industry, landfills, power plants, big roads."""
+    """Mapped pollution sources near a place: construction sites, industry, landfills, power plants, big roads.
+
+    Live from OpenStreetMap when its public servers answer. When they are busy, the saved snapshot for the
+    station (scripts/build_osm_snapshot.py) is returned instead, marked with the date it was taken."""
     radius_km = max(0.5, min(float(radius_km), 5.0))
+    try:
+        return _nearby_live(place, radius_km)
+    except (RuntimeError, requests.RequestException) as e:
+        snap = json.loads(SNAPSHOT.read_text(encoding="utf-8")) if SNAPSHOT.exists() else {}
+        saved = snap.get("places", {}).get(_slug(place))
+        if saved is None or radius_km != snap.get("radius_km"):
+            raise
+        return {**saved, "note": f"live map servers unavailable ({e}); this is the saved snapshot "
+                                 f"from {snap['taken']}"}
+
+
+def _nearby_live(place: str, radius_km: float) -> dict:
     # Mapped features change slowly, so answers are cached per place and radius (public servers are slow).
-    cache = ROOT / "data" / "cache" / f"osm_{''.join(c if c.isalnum() else '_' for c in place.lower())}_{radius_km:g}.json"
+    cache = ROOT / "data" / "cache" / f"osm_{_slug(place)}_{radius_km:g}.json"
     if cache.exists():
         return json.loads(cache.read_text(encoding="utf-8"))
     g = geocode(place)

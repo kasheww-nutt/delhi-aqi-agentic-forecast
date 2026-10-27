@@ -7,6 +7,12 @@ const LLM_AGENTS = new Set(["schema_adapter", "eda", "critic", "explainer"]);
 const DATA_KEYS = ["metrics", "scores", "decision", "results", "params", "overrides", "feature_groups", "source",
   "problems", "warnings", "skipped_groups", "traceback"];
 
+interface ToolCall { tool: string; input: Record<string, unknown> | null; ok: boolean | null; result: string }
+
+// `place: "ITO", radius_km: 2` — short enough for one terminal line
+const toolArgs = (input: ToolCall["input"]) =>
+  Object.entries(input ?? {}).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join(", ").slice(0, 120);
+
 function Json(props: { label: string; value: unknown }) {
   return (
     <details>
@@ -47,6 +53,14 @@ export function EventLines(props: { e: LedgerEvent }) {
           {e.stdin ? "prompt on stdin" : "prompt as argument"} · {String(e.prompt ?? "").length.toLocaleString()} characters
         </div>
         <Json label="prompt sent" value={e.prompt} />
+        {Array.isArray(e.tools) && (e.tools as ToolCall[]).map((t, i) => (
+          <div key={i}>
+            <Line tone={t.ok === false ? "err" : "dim"}>
+              {t.ok === false ? "✗" : "⚙"} {t.tool.replace(/^mcp__[^_]+__/, "")}({toolArgs(t.input)})
+            </Line>
+            {t.result && <Json label="tool result" value={t.result} />}
+          </div>
+        ))}
         {!failed && <Json label="reply" value={e.reply} />}
         <Line tone={failed ? "err" : "ok"}>{failed ? `✗ ${String(e.error)}` : `← ${e.summary}`}</Line>
       </>

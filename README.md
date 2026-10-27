@@ -1,6 +1,6 @@
 # Delhi Next-Day AQI Forecasting: an Agentic ML Pipeline
 
-AUCML (TE7483) ESE case study · **release v1.0** (the version presented in the deck and report)
+AUCML (TE7483) ESE case study · **v1.1** = v1.0 (the version in the deck and report, tag `v1.0-ese`) + the source scout
 
 **Question.** Can a model beat "tomorrow = today" at forecasting tomorrow's CPCB air-quality category, using
 only what is known today?
@@ -36,6 +36,7 @@ forecast, the same model falls just short of persistence (0.574).
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | the 14 agents, state, ledger, LLM CLIs, API and console, repository layout |
 | [docs/RESULTS.md](docs/RESULTS.md) | every result with its source run, plus honest limits |
 | [docs/REPRODUCE.md](docs/REPRODUCE.md) | install, keys, downloads, commands, expected numbers, timings |
+| [docs/SCOUT.md](docs/SCOUT.md) | v1.1 source scout: live explanation of what is polluting a station (MCP tools + web search) |
 | [docs/VIVA_PREP.md](docs/VIVA_PREP.md) | viva guide in simple words: story, choices, likely questions |
 | [docs/GLOSSARY.md](docs/GLOSSARY.md) | every term used, explained simply with a project example |
 | [docs/results/](docs/results/) | the saved run ledgers, figures and `results.json` behind every number |
@@ -71,13 +72,20 @@ schema_adapter → ingestion → profiler → eda → cleaner → features → l
 ```bash
 python -m venv .venv
 .venv/Scripts/pip install -r requirements.txt && .venv/Scripts/pip install -e .
-python -m pytest                                   # 18 tests
+python -m pytest                                   # 26 tests
 python scripts/run_pipeline.py --no-llm            # needs the data: see docs/REPRODUCE.md
 uvicorn api.server:app --port 8000                 # console at http://localhost:8000 (after npm run build in web/)
 ```
 
 The LLM agents use coding-agent CLIs that are already logged in (Claude Code, Gemini CLI, Codex, agy), run
 headless, so there is no API bill. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), section 4.
+
+## Source scout (v1.1)
+
+A separate agent explains what is probably polluting a station right now. The Claude Code CLI calls our own MCP
+tools (NASA FIRMS crop fires, OpenStreetMap pollution sources, the station's latest readings) plus web search, and
+writes a short brief with every claim sourced. It is for explanation only and never feeds the model. Run it from
+the console's **Source scout** page. Details: [docs/SCOUT.md](docs/SCOUT.md).
 
 ## Stack
 

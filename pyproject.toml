@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aqi"
-version = "1.0.0"
+version = "1.1.0"
 description = "Leakage-free next-day AQI-category forecasting for Delhi CPCB stations (agentic pipeline)"
 requires-python = ">=3.10"
 
