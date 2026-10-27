@@ -1,0 +1,20 @@
+{"ts": 1792645186.9356132, "node": "pipeline", "status": "start", "summary": "config C:\\Users\\kashif\\pro-lol\\Projects\\AUCML\\configs\\delhi.yaml (sha 5fa1ce22019b)"}
+{"ts": 1792645186.9506285, "node": "ingestion", "status": "start", "summary": ""}
+{"ts": 1792645196.86629, "node": "ingestion", "status": "info", "summary": "288 station-year files, 36 stations, 2,524,608 hourly rows (2018\u20132025)", "metrics": {"files": 288, "stations": 36, "rows": 2524608}}
+{"ts": 1792645196.883786, "node": "ingestion", "status": "done", "summary": "", "seconds": 9.9}
+{"ts": 1792645196.883786, "node": "profiler", "status": "start", "summary": ""}
+{"ts": 1792645197.7648127, "node": "profiler", "status": "info", "summary": "kept 34/36 stations (PM2.5 \u226570% in \u22656 years)", "metrics": {"stations_kept": 34, "dropped": ["104_Burari_Crossing_Delhi_IITM", "5395_Lodhi_Road_Delhi_IITM"]}, "artifacts": ["coverage_heatmap.png", "profile.json"]}
+{"ts": 1792645197.7648127, "node": "profiler", "status": "done", "summary": "", "seconds": 0.9}
+{"ts": 1792645197.7648127, "node": "eda", "status": "start", "summary": ""}
+{"ts": 1792645199.4190867, "node": "eda", "status": "info", "summary": "peak month 11, winter peak hour 23:00 IST", "narrated_by": "none (no Anthropic credentials)", "artifacts": ["eda_overview.png", "eda_stats.json"]}
+{"ts": 1792645199.4324994, "node": "eda", "status": "done", "summary": "", "seconds": 1.7}
+{"ts": 1792645199.4345038, "node": "cleaner", "status": "start", "summary": ""}
+{"ts": 1792645204.7890003, "node": "cleaner", "status": "info", "summary": "99,348 station-days; target available on 96.0%", "decisions": ["0 negative readings set to missing; 46 PM2.5 readings at the 1000 \u00b5g/m\u00b3 instrument ceiling kept as censored values", "dropped no columns (> 60% missing)", "interpolated gaps \u2264 6 h within each station", "daily means need \u2265 16 valid hours; CO/O3 use the max 8-h mean", "remaining input gaps filled with station-month medians computed on 2018\u20132022 (train) only, with a missing-count and PM2.5-missing flag"], "metrics": {"station_days": 99348, "dropped_columns": [], "bucket_distribution": {"0.0": 1484, "1.0": 15698, "2.0": 33371, "3.0": 14502, "4.0": 21906, "5.0": 8401}}}
+{"ts": 1792645204.805004, "node": "cleaner", "status": "done", "summary": "", "seconds": 5.4}
+{"ts": 1792645204.8060079, "node": "features", "status": "start", "summary": ""}
+{"ts": 1792645213.3226755, "node": "features", "status": "info", "summary": "44 features on 95,348 rows; groups {'pollutant_history': 24, 'station_meteorology': 8, 'calendar': 5, 'city_context': 3, 'era5_blh': 3, 'leaky_demo': 1}", "skipped_groups": ["cams_forecast"], "metrics": {"features": 44, "rows": 95348}}
+{"ts": 1792645213.3255777, "node": "features", "status": "done", "summary": "", "seconds": 8.5}
+{"ts": 1792645213.3255777, "node": "leakage_guard", "status": "start", "summary": ""}
+{"ts": 1792645213.48579, "node": "leakage_guard", "status": "halt", "summary": "leakage detected \u2014 run stopped", "problems": ["pm25_t1_LEAK uses day t+1 information that is not known on day t"]}
+{"ts": 1792645213.48579, "node": "leakage_guard", "status": "halted", "summary": "", "seconds": 0.2}
+{"ts": 1792645213.4919567, "node": "pipeline", "status": "halted", "summary": "pm25_t1_LEAK uses day t+1 information that is not known on day t"}

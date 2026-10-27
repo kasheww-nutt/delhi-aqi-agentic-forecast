@@ -1,0 +1,260 @@
+[
+  {
+    "name": "PM2.5_t0",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "PM10_t0",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "NO2_t0",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "CO_t0",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "Ozone_t0",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "SO2_t0",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "NH3_t0",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "aqi_t0",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "bucket_t0",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "aqi_lag1",
+    "group": "pollutant_history",
+    "offset": -1,
+    "known_in_advance": false
+  },
+  {
+    "name": "pm25_lag1",
+    "group": "pollutant_history",
+    "offset": -1,
+    "known_in_advance": false
+  },
+  {
+    "name": "aqi_lag2",
+    "group": "pollutant_history",
+    "offset": -2,
+    "known_in_advance": false
+  },
+  {
+    "name": "pm25_lag2",
+    "group": "pollutant_history",
+    "offset": -2,
+    "known_in_advance": false
+  },
+  {
+    "name": "aqi_lag3",
+    "group": "pollutant_history",
+    "offset": -3,
+    "known_in_advance": false
+  },
+  {
+    "name": "pm25_lag3",
+    "group": "pollutant_history",
+    "offset": -3,
+    "known_in_advance": false
+  },
+  {
+    "name": "aqi_lag7",
+    "group": "pollutant_history",
+    "offset": -7,
+    "known_in_advance": false
+  },
+  {
+    "name": "pm25_lag7",
+    "group": "pollutant_history",
+    "offset": -7,
+    "known_in_advance": false
+  },
+  {
+    "name": "aqi_roll3_mean",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "aqi_roll3_std",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "aqi_roll7_mean",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "aqi_roll7_std",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "aqi_delta1",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "n_missing_inputs_t0",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "pm25_missing_t0",
+    "group": "pollutant_history",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "AT_t0",
+    "group": "station_meteorology",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "RH_t0",
+    "group": "station_meteorology",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "WS_t0",
+    "group": "station_meteorology",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "WD_sin_t0",
+    "group": "station_meteorology",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "WD_cos_t0",
+    "group": "station_meteorology",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "RF_t0",
+    "group": "station_meteorology",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "SR_t0",
+    "group": "station_meteorology",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "BP_t0",
+    "group": "station_meteorology",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "dow_t1",
+    "group": "calendar",
+    "offset": 1,
+    "known_in_advance": true
+  },
+  {
+    "name": "doy_sin_t1",
+    "group": "calendar",
+    "offset": 1,
+    "known_in_advance": true
+  },
+  {
+    "name": "doy_cos_t1",
+    "group": "calendar",
+    "offset": 1,
+    "known_in_advance": true
+  },
+  {
+    "name": "diwali_window_t1",
+    "group": "calendar",
+    "offset": 1,
+    "known_in_advance": true
+  },
+  {
+    "name": "lockdown_t0",
+    "group": "calendar",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "city_aqi_mean_t0",
+    "group": "city_context",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "city_aqi_max_t0",
+    "group": "city_context",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "station_minus_city_t0",
+    "group": "city_context",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "blh_mean_t0",
+    "group": "era5_blh",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "blh_min_t0",
+    "group": "era5_blh",
+    "offset": 0,
+    "known_in_advance": false
+  },
+  {
+    "name": "ventilation_t0",
+    "group": "era5_blh",
+    "offset": 0,
+    "known_in_advance": false
+  }
+]

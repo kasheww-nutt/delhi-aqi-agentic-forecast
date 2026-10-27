@@ -1,0 +1,918 @@
+{
+  "cams-full": {
+    "what": "Final run: all feature groups incl. CAMS (headline result)",
+    "split": {
+      "sizes": {
+        "train": 58920,
+        "val": 24161,
+        "test": 12200
+      },
+      "test_sha256": "b9d3dbfdcb06ad1cce947d0279563c8fabcf3496a96fc6c1e13fa46da937c3ce",
+      "ranges": {
+        "train": [
+          "2018-01-01",
+          "2022-12-31"
+        ],
+        "val": [
+          "2023-01-01",
+          "2024-12-31"
+        ],
+        "test": [
+          "2025-01-01",
+          "2025-12-31"
+        ],
+        "lockdown": [
+          "2020-03-25",
+          "2020-06-30"
+        ]
+      }
+    },
+    "test": {
+      "persistence": {
+        "macro_f1": 0.5833,
+        "weighted_f1": 0.6542,
+        "accuracy": 0.6543,
+        "severe_recall": 0.8448,
+        "within_one_category": 0.9682,
+        "mean_category_error": 0.3802,
+        "per_class_recall": [
+          0.38,
+          0.712,
+          0.729,
+          0.413,
+          0.669,
+          0.59
+        ],
+        "confusion": [
+          [
+            62,
+            87,
+            12,
+            1,
+            0,
+            1
+          ],
+          [
+            94,
+            1634,
+            530,
+            30,
+            7,
+            1
+          ],
+          [
+            4,
+            555,
+            3293,
+            540,
+            125,
+            2
+          ],
+          [
+            0,
+            8,
+            550,
+            685,
+            381,
+            36
+          ],
+          [
+            0,
+            1,
+            127,
+            392,
+            1736,
+            337
+          ],
+          [
+            1,
+            0,
+            14,
+            18,
+            364,
+            572
+          ]
+        ],
+        "n": 12200
+      },
+      "lightgbm": {
+        "macro_f1": 0.5995,
+        "weighted_f1": 0.661,
+        "accuracy": 0.6514,
+        "severe_recall": 0.8596,
+        "within_one_category": 0.9797,
+        "mean_category_error": 0.3711,
+        "per_class_recall": [
+          0.509,
+          0.723,
+          0.62,
+          0.603,
+          0.668,
+          0.688
+        ],
+        "confusion": [
+          [
+            83,
+            69,
+            9,
+            1,
+            0,
+            1
+          ],
+          [
+            196,
+            1661,
+            391,
+            45,
+            2,
+            1
+          ],
+          [
+            8,
+            608,
+            2802,
+            1034,
+            65,
+            2
+          ],
+          [
+            0,
+            10,
+            282,
+            1001,
+            338,
+            29
+          ],
+          [
+            0,
+            2,
+            39,
+            425,
+            1733,
+            394
+          ],
+          [
+            1,
+            0,
+            12,
+            21,
+            268,
+            667
+          ]
+        ],
+        "n": 12200
+      }
+    },
+    "validation_rounds": [
+      {
+        "iteration": 1,
+        "scores": {
+          "persistence": {
+            "macro_f1": 0.5872,
+            "severe_recall": 0.8461,
+            "accuracy": 0.6479,
+            "within_one_category": 0.9656,
+            "train_macro_f1": 0.5778
+          },
+          "logreg": {
+            "macro_f1": 0.5247,
+            "severe_recall": 0.8218,
+            "accuracy": 0.5878,
+            "within_one_category": 0.9534,
+            "train_macro_f1": 0.556
+          },
+          "random_forest": {
+            "macro_f1": 0.5878,
+            "severe_recall": 0.862,
+            "accuracy": 0.6745,
+            "within_one_category": 0.9712,
+            "train_macro_f1": 0.969
+          },
+          "lightgbm": {
+            "macro_f1": 0.5889,
+            "severe_recall": 0.8306,
+            "accuracy": 0.6534,
+            "within_one_category": 0.9713,
+            "train_macro_f1": 0.8051
+          }
+        }
+      },
+      {
+        "iteration": 2,
+        "scores": {
+          "persistence": {
+            "macro_f1": 0.5872,
+            "severe_recall": 0.8461,
+            "accuracy": 0.6479,
+            "within_one_category": 0.9656,
+            "train_macro_f1": 0.5778
+          },
+          "logreg": {
+            "macro_f1": 0.5247,
+            "severe_recall": 0.8218,
+            "accuracy": 0.5878,
+            "within_one_category": 0.9534,
+            "train_macro_f1": 0.556
+          },
+          "random_forest": {
+            "macro_f1": 0.5878,
+            "severe_recall": 0.862,
+            "accuracy": 0.6745,
+            "within_one_category": 0.9712,
+            "train_macro_f1": 0.969
+          },
+          "lightgbm": {
+            "macro_f1": 0.5937,
+            "severe_recall": 0.8356,
+            "accuracy": 0.6474,
+            "within_one_category": 0.9733,
+            "train_macro_f1": 0.7585
+          }
+        }
+      }
+    ],
+    "critic": [
+      {
+        "iteration": 1,
+        "summary": "regularize_lgbm — LightGBM (val macro-F1 0.5889) is barely better than the persistence baseline (0.5872) and does worse on the high-pollution end: severe_recall is 0.831 against persistence's 0.846, and per-class Severe recall is 0.509 against 0.603. The train-validation gap is large (train macro-F1 0.805, val 0.589), so the model is clearly overfitting. Random forest overfits even more (train 0.969, val 0.588) and its Good and Severe recall are lower still (0.265 and 0.485). Middle classes are learned reasonably well, but the rare extreme classes do not generalise.",
+        "by": "llm (claude)"
+      },
+      {
+        "iteration": 2,
+        "summary": "STOP — last change moved val macro-F1 by +0.005",
+        "by": "rule"
+      }
+    ]
+  },
+  "full-era5": {
+    "what": "Ablation: same pipeline without the CAMS forecast",
+    "split": {
+      "sizes": {
+        "train": 58920,
+        "val": 24161,
+        "test": 12200
+      },
+      "test_sha256": "e8fc24a98426b43c154f37a5c732d8c04273620072bccbb734688fd4d591eb05",
+      "ranges": {
+        "train": [
+          "2018-01-01",
+          "2022-12-31"
+        ],
+        "val": [
+          "2023-01-01",
+          "2024-12-31"
+        ],
+        "test": [
+          "2025-01-01",
+          "2025-12-31"
+        ],
+        "lockdown": [
+          "2020-03-25",
+          "2020-06-30"
+        ]
+      }
+    },
+    "test": {
+      "persistence": {
+        "macro_f1": 0.5833,
+        "weighted_f1": 0.6542,
+        "accuracy": 0.6543,
+        "severe_recall": 0.8448,
+        "within_one_category": 0.9682,
+        "mean_category_error": 0.3802,
+        "per_class_recall": [
+          0.38,
+          0.712,
+          0.729,
+          0.413,
+          0.669,
+          0.59
+        ],
+        "confusion": [
+          [
+            62,
+            87,
+            12,
+            1,
+            0,
+            1
+          ],
+          [
+            94,
+            1634,
+            530,
+            30,
+            7,
+            1
+          ],
+          [
+            4,
+            555,
+            3293,
+            540,
+            125,
+            2
+          ],
+          [
+            0,
+            8,
+            550,
+            685,
+            381,
+            36
+          ],
+          [
+            0,
+            1,
+            127,
+            392,
+            1736,
+            337
+          ],
+          [
+            1,
+            0,
+            14,
+            18,
+            364,
+            572
+          ]
+        ],
+        "n": 12200
+      },
+      "lightgbm": {
+        "macro_f1": 0.5741,
+        "weighted_f1": 0.6381,
+        "accuracy": 0.6278,
+        "severe_recall": 0.8568,
+        "within_one_category": 0.9752,
+        "mean_category_error": 0.3989,
+        "per_class_recall": [
+          0.521,
+          0.709,
+          0.595,
+          0.59,
+          0.605,
+          0.733
+        ],
+        "confusion": [
+          [
+            85,
+            69,
+            7,
+            1,
+            0,
+            1
+          ],
+          [
+            252,
+            1627,
+            371,
+            45,
+            1,
+            0
+          ],
+          [
+            21,
+            685,
+            2687,
+            1034,
+            90,
+            2
+          ],
+          [
+            0,
+            10,
+            292,
+            980,
+            337,
+            41
+          ],
+          [
+            0,
+            1,
+            46,
+            426,
+            1570,
+            550
+          ],
+          [
+            0,
+            1,
+            12,
+            24,
+            222,
+            710
+          ]
+        ],
+        "n": 12200
+      }
+    },
+    "validation_rounds": [
+      {
+        "iteration": 1,
+        "scores": {
+          "persistence": {
+            "macro_f1": 0.5872,
+            "severe_recall": 0.8461,
+            "accuracy": 0.6479,
+            "within_one_category": 0.9656,
+            "train_macro_f1": 0.5778
+          },
+          "logreg": {
+            "macro_f1": 0.5372,
+            "severe_recall": 0.8471,
+            "accuracy": 0.5982,
+            "within_one_category": 0.9573,
+            "train_macro_f1": 0.5434
+          },
+          "random_forest": {
+            "macro_f1": 0.5879,
+            "severe_recall": 0.8812,
+            "accuracy": 0.6669,
+            "within_one_category": 0.9699,
+            "train_macro_f1": 0.9693
+          },
+          "lightgbm": {
+            "macro_f1": 0.583,
+            "severe_recall": 0.8608,
+            "accuracy": 0.6335,
+            "within_one_category": 0.9702,
+            "train_macro_f1": 0.8577
+          }
+        }
+      },
+      {
+        "iteration": 2,
+        "scores": {
+          "persistence": {
+            "macro_f1": 0.5872,
+            "severe_recall": 0.8461,
+            "accuracy": 0.6479,
+            "within_one_category": 0.9656,
+            "train_macro_f1": 0.5778
+          },
+          "logreg": {
+            "macro_f1": 0.5372,
+            "severe_recall": 0.8471,
+            "accuracy": 0.5982,
+            "within_one_category": 0.9573,
+            "train_macro_f1": 0.5434
+          },
+          "random_forest": {
+            "macro_f1": 0.5879,
+            "severe_recall": 0.8812,
+            "accuracy": 0.6669,
+            "within_one_category": 0.9699,
+            "train_macro_f1": 0.9693
+          },
+          "lightgbm": {
+            "macro_f1": 0.5894,
+            "severe_recall": 0.8596,
+            "accuracy": 0.6397,
+            "within_one_category": 0.9709,
+            "train_macro_f1": 0.7991
+          }
+        }
+      }
+    ],
+    "critic": [
+      {
+        "iteration": 1,
+        "summary": "regularize_lgbm — train–val macro-F1 gap 0.38 suggests overfitting",
+        "by": "rule (llm: no Anthropic credentials)"
+      },
+      {
+        "iteration": 2,
+        "summary": "STOP — last change moved val macro-F1 by +0.002",
+        "by": "rule"
+      }
+    ]
+  },
+  "vopani-delhi-2": {
+    "what": "Second dataset (Kaggle 'Air Quality Data in India', Delhi) through the schema adapter",
+    "split": {
+      "sizes": {
+        "train": 2872,
+        "test": 1788,
+        "val": 1679
+      },
+      "test_sha256": "3b0c1605c4b04f9e2466eb31c833646c0b97607805202d6424b802d6168337cc",
+      "ranges": {
+        "train": [
+          "2015-01-01",
+          "2017-12-31"
+        ],
+        "val": [
+          "2018-01-01",
+          "2018-12-31"
+        ],
+        "test": [
+          "2019-01-01",
+          "2019-12-31"
+        ],
+        "lockdown": [
+          "2020-03-25",
+          "2020-06-30"
+        ]
+      }
+    },
+    "test": {
+      "persistence": {
+        "macro_f1": 0.4887,
+        "weighted_f1": 0.5963,
+        "accuracy": 0.5962,
+        "severe_recall": 0.8188,
+        "within_one_category": 0.934,
+        "mean_category_error": 0.476,
+        "per_class_recall": [
+          0.0,
+          0.598,
+          0.652,
+          0.414,
+          0.632,
+          0.641
+        ],
+        "confusion": [
+          [
+            0,
+            2,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            98,
+            59,
+            3,
+            2,
+            0
+          ],
+          [
+            0,
+            57,
+            389,
+            101,
+            45,
+            5
+          ],
+          [
+            0,
+            3,
+            113,
+            134,
+            62,
+            12
+          ],
+          [
+            0,
+            2,
+            35,
+            79,
+            311,
+            65
+          ],
+          [
+            0,
+            0,
+            2,
+            9,
+            64,
+            134
+          ]
+        ],
+        "n": 1788
+      },
+      "random_forest": {
+        "macro_f1": 0.4802,
+        "weighted_f1": 0.5787,
+        "accuracy": 0.5733,
+        "severe_recall": 0.7689,
+        "within_one_category": 0.9441,
+        "mean_category_error": 0.4871,
+        "per_class_recall": [
+          0.0,
+          0.683,
+          0.549,
+          0.525,
+          0.565,
+          0.656
+        ],
+        "confusion": [
+          [
+            0,
+            2,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            112,
+            46,
+            3,
+            2,
+            0
+          ],
+          [
+            1,
+            104,
+            328,
+            132,
+            27,
+            5
+          ],
+          [
+            0,
+            2,
+            102,
+            170,
+            38,
+            12
+          ],
+          [
+            0,
+            0,
+            29,
+            114,
+            278,
+            71
+          ],
+          [
+            0,
+            0,
+            1,
+            18,
+            53,
+            137
+          ]
+        ],
+        "n": 1788
+      }
+    },
+    "validation_rounds": [
+      {
+        "iteration": 1,
+        "scores": {
+          "persistence": {
+            "macro_f1": 0.5033,
+            "severe_recall": 0.8454,
+            "accuracy": 0.6289,
+            "within_one_category": 0.9315,
+            "train_macro_f1": 0.5981
+          },
+          "logreg": {
+            "macro_f1": 0.4606,
+            "severe_recall": 0.808,
+            "accuracy": 0.5718,
+            "within_one_category": 0.9166,
+            "train_macro_f1": 0.6051
+          },
+          "random_forest": {
+            "macro_f1": 0.4955,
+            "severe_recall": 0.8536,
+            "accuracy": 0.6194,
+            "within_one_category": 0.9321,
+            "train_macro_f1": 0.9387
+          },
+          "lightgbm": {
+            "macro_f1": 0.4856,
+            "severe_recall": 0.8302,
+            "accuracy": 0.6045,
+            "within_one_category": 0.9369,
+            "train_macro_f1": 0.9383
+          }
+        }
+      },
+      {
+        "iteration": 2,
+        "scores": {
+          "persistence": {
+            "macro_f1": 0.5033,
+            "severe_recall": 0.8454,
+            "accuracy": 0.6289,
+            "within_one_category": 0.9315,
+            "train_macro_f1": 0.5981
+          },
+          "logreg": {
+            "macro_f1": 0.4606,
+            "severe_recall": 0.808,
+            "accuracy": 0.5718,
+            "within_one_category": 0.9166,
+            "train_macro_f1": 0.6051
+          },
+          "random_forest": {
+            "macro_f1": 0.4993,
+            "severe_recall": 0.7881,
+            "accuracy": 0.6033,
+            "within_one_category": 0.9434,
+            "train_macro_f1": 0.667
+          },
+          "lightgbm": {
+            "macro_f1": 0.4856,
+            "severe_recall": 0.8302,
+            "accuracy": 0.6045,
+            "within_one_category": 0.9369,
+            "train_macro_f1": 0.9383
+          }
+        }
+      }
+    ],
+    "critic": [
+      {
+        "iteration": 1,
+        "summary": "regularize_rf — random_forest train–val macro-F1 gap 0.44 suggests overfitting",
+        "by": "rule (llm: no Anthropic credentials)"
+      },
+      {
+        "iteration": 2,
+        "summary": "STOP — last change moved val macro-F1 by +0.004",
+        "by": "rule"
+      }
+    ]
+  },
+  "20261022-102940-leaky": {
+    "what": "Leakage demo: tomorrow's PM2.5 injected; the guard halts the run",
+    "halted": "pm25_t1_LEAK uses day t+1 information that is not known on day t"
+  },
+  "v1-check-nollm": {
+    "what": "Release check: frozen v1.0 code, --no-llm (rule-based critic only)",
+    "split": {
+      "sizes": {
+        "train": 58920,
+        "val": 24161,
+        "test": 12200
+      },
+      "test_sha256": "b9d3dbfdcb06ad1cce947d0279563c8fabcf3496a96fc6c1e13fa46da937c3ce",
+      "ranges": {
+        "train": [
+          "2018-01-01",
+          "2022-12-31"
+        ],
+        "val": [
+          "2023-01-01",
+          "2024-12-31"
+        ],
+        "test": [
+          "2025-01-01",
+          "2025-12-31"
+        ],
+        "lockdown": [
+          "2020-03-25",
+          "2020-06-30"
+        ]
+      }
+    },
+    "test": {
+      "persistence": {
+        "macro_f1": 0.5833,
+        "weighted_f1": 0.6542,
+        "accuracy": 0.6543,
+        "severe_recall": 0.8448,
+        "within_one_category": 0.9682,
+        "mean_category_error": 0.3802,
+        "per_class_recall": [
+          0.38,
+          0.712,
+          0.729,
+          0.413,
+          0.669,
+          0.59
+        ],
+        "confusion": [
+          [
+            62,
+            87,
+            12,
+            1,
+            0,
+            1
+          ],
+          [
+            94,
+            1634,
+            530,
+            30,
+            7,
+            1
+          ],
+          [
+            4,
+            555,
+            3293,
+            540,
+            125,
+            2
+          ],
+          [
+            0,
+            8,
+            550,
+            685,
+            381,
+            36
+          ],
+          [
+            0,
+            1,
+            127,
+            392,
+            1736,
+            337
+          ],
+          [
+            1,
+            0,
+            14,
+            18,
+            364,
+            572
+          ]
+        ],
+        "n": 12200
+      },
+      "lightgbm": {
+        "macro_f1": 0.5995,
+        "weighted_f1": 0.661,
+        "accuracy": 0.6514,
+        "severe_recall": 0.8596,
+        "within_one_category": 0.9797,
+        "mean_category_error": 0.3711,
+        "per_class_recall": [
+          0.509,
+          0.723,
+          0.62,
+          0.603,
+          0.668,
+          0.688
+        ],
+        "confusion": [
+          [
+            83,
+            69,
+            9,
+            1,
+            0,
+            1
+          ],
+          [
+            196,
+            1661,
+            391,
+            45,
+            2,
+            1
+          ],
+          [
+            8,
+            608,
+            2802,
+            1034,
+            65,
+            2
+          ],
+          [
+            0,
+            10,
+            282,
+            1001,
+            338,
+            29
+          ],
+          [
+            0,
+            2,
+            39,
+            425,
+            1733,
+            394
+          ],
+          [
+            1,
+            0,
+            12,
+            21,
+            268,
+            667
+          ]
+        ],
+        "n": 12200
+      }
+    },
+    "critic": [
+      {
+        "iteration": 1,
+        "summary": "regularize_lgbm — lightgbm train–val macro-F1 gap 0.22 suggests overfitting",
+        "by": "rule (llm: disabled in config)"
+      },
+      {
+        "iteration": 2,
+        "summary": "STOP — last change moved val macro-F1 by +0.005",
+        "by": "rule"
+      }
+    ]
+  }
+}
