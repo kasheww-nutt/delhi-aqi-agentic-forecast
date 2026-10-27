@@ -1,111 +1,90 @@
-# Delhi Next-Day AQI Forecasting — Agentic ML Pipeline
+# Delhi Next-Day AQI Forecasting: an Agentic ML Pipeline
 
-AUCML (TE7483) ESE case-study project.
+AUCML (TE7483) ESE case study · **release v1.0** (the version presented in the deck and report)
 
-**Problem.** Air-quality advisories in Delhi rely on physics-based forecasts (SAFAR, CAMS) that are biased at
-street-level stations, while most public ML "AQI predictors" quietly use same-day pollutant readings and so
-forecast nothing. This project builds a **leakage-free, next-day AQI-category forecaster** for Delhi's CPCB
-stations (2018–2025), fusing station history, on-site meteorology, ERA5 boundary-layer height and the CAMS
-day-ahead forecast, and tests whether a lightweight ML layer beats both persistence and the raw physics forecast.
+**Question.** Can a model beat "tomorrow = today" at forecasting tomorrow's CPCB air-quality category, using
+only what is known today?
 
-See [`docs/`](docs/) for the project audit and the day-1 data-gate results.
+**Answer.** Yes, narrowly. On the locked 2025 test year (34 Delhi stations, 12,200 station-days, scored once),
+LightGBM with the CAMS physics forecast reaches **macro-F1 0.600 vs 0.583** for persistence. It catches **86%
+of Very Poor/Severe days** (persistence 84%) and is **within one category on 98% of days**. Without the CAMS
+forecast, the same model falls just short of persistence (0.574).
+
+## Why this project is different
+
+- **Truly next-day and leakage-free.** Every feature is registered with its day offset, and a Leakage Guard
+  agent halts the run if any input could contain the future. Much public AQI work predicts today's AQI from
+  today's pollutants, which forecasts nothing.
+- **An honest test.** Time-ordered split (train 2018–22, validation 2023–24, test 2025). The test year is
+  hashed and read once, and persistence is in every comparison.
+- **ML on top of a physics forecast.** The CAMS global forecast is used as a feature, and the model corrects its
+  street-level bias using today's station readings.
+- **Categories that matter.** The model predicts the six CPCB categories used for advisories, and Very
+  Poor/Severe recall is reported separately.
+- **Agents with guardrails.** 14 agents in a fixed LangGraph graph. Rules do everything that must be correct;
+  an LLM is used only for notes, mapping unknown columns, and a critic that picks from a whitelist. With no
+  LLM at all, the result is identical.
+- **Auditable and reusable.** Every decision is written to a ledger, and a schema adapter runs the same
+  pipeline on other datasets.
+
+## Documentation
+
+| Document | What it covers |
+|---|---|
+| [docs/METHODOLOGY.md](docs/METHODOLOGY.md) | task, AQI calculation, cleaning, features, leakage guard, split, models, critic loop, metrics |
+| [docs/DATA.md](docs/DATA.md) | data sources, variables, the CAMS leakage-safe setup, data quality, the second dataset |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | the 14 agents, state, ledger, LLM CLIs, API and console, repository layout |
+| [docs/RESULTS.md](docs/RESULTS.md) | every result with its source run, plus honest limits |
+| [docs/REPRODUCE.md](docs/REPRODUCE.md) | install, keys, downloads, commands, expected numbers, timings |
+| [docs/VIVA_PREP.md](docs/VIVA_PREP.md) | viva guide in simple words: story, choices, likely questions |
+| [docs/GLOSSARY.md](docs/GLOSSARY.md) | every term used, explained simply with a project example |
+| [docs/results/](docs/results/) | the saved run ledgers, figures and `results.json` behind every number |
+| [docs/planning/](docs/planning/) | the original project audit and day-1 data-gate notes |
 
 ## Pipeline
 
 ```
-ingestion → profiler → eda → cleaner → features → leakage_guard ─(leak)→ HALT
-                                                       └→ splitter (test locked + hashed)
-                                                           → trainer ⇄ evaluator → critic ─(STOP)→ tester → explainer → reporter
+schema_adapter → ingestion → profiler → eda → cleaner → features → leakage_guard ─(leak)→ HALT
+                                                                       └→ splitter (test locked + hashed)
+                     trainer ⇄ evaluator → critic ─(STOP)→ tester → explainer → reporter
 ```
 
 | Agent | Type | Job |
 |---|---|---|
+| schema_adapter | rule + LLM | maps any suitable dataset onto the canonical schema |
 | ingestion | rule | station-year CSVs → hourly panel |
 | profiler | rule | coverage per station-year; keeps stations with enough PM2.5 data |
-| eda | rule + LLM | plots; LLM narrates summary statistics only |
+| eda | rule + LLM | plots; the LLM narrates summary statistics only |
 | cleaner | rule | negatives, instrument ceiling, short-gap interpolation, CPCB daily AQI, train-only imputation |
-| features | rule | every feature registered with its time offset relative to the issue day |
+| features | rule | 45 features, each registered with its offset from the issue day |
 | leakage_guard | rule | halts the run on unregistered, future or suspiciously target-like inputs |
 | splitter | rule (locked) | train 2018–22 / val 2023–24 / test 2025; test file hashed and hidden |
 | trainer | tools | persistence, logistic regression, random forest, LightGBM (Optuna on an inner hold-out) |
-| evaluator | rule | macro-F1, severe-day recall, ±1-category accuracy on validation only |
-| critic | LLM / rule | one whitelisted action per iteration, or STOP; stopping rules enforced in code |
+| evaluator | rule | macro-F1, Very Poor/Severe recall and more, on validation only |
+| critic | LLM / rule | one whitelisted action per round, or STOP; stopping rules enforced in code |
 | tester | rule (once) | verifies the hash, refits on train+val, scores 2025 once |
 | explainer | rule + LLM | SHAP drivers + plain-language notes |
 | reporter | rule | results tables for the report |
 
-Every step is written to `runs/<run_id>/ledger.jsonl`; the console reads only that file and the run's artifacts.
-
-## Setup
+## Quick start
 
 ```bash
 python -m venv .venv
-.venv/Scripts/pip install -r requirements.txt   # Windows; use .venv/bin/pip on macOS/Linux
-.venv/Scripts/pip install -e .
+.venv/Scripts/pip install -r requirements.txt && .venv/Scripts/pip install -e .
+python -m pytest                                   # 18 tests
+python scripts/run_pipeline.py --no-llm            # needs the data: see docs/REPRODUCE.md
+uvicorn api.server:app --port 8000                 # console at http://localhost:8000 (after npm run build in web/)
 ```
 
-Data (not committed):
+The LLM agents use coding-agent CLIs that are already logged in (Claude Code, Gemini CLI, Codex, agy), run
+headless, so there is no API bill. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), section 4.
 
-```bash
-kaggle datasets download yug201/delhi-air-quality-cpcb-hourly-2010-2026 -p data/raw/delhi_cpcb --unzip
-python scripts/fetch_era5_blh.py                  # ERA5 boundary-layer height (no key)
-python scripts/fetch_cams.py --start 2018-01 --end 2025-12   # CAMS forecasts, needs ~/.cdsapirc (~2.5 h)
-```
+## Stack
 
-The LLM-assisted agents (schema mapping, EDA notes, critic, explainer) use the coding-agent CLIs already
-logged in on the machine, run headless on your subscriptions with no API bill: Claude Code (`claude -p`),
-Gemini CLI, Codex (`codex exec`) and agy, tried in the order set by `llm.cli` in the config, moving to the next
-one when a CLI fails or hits its usage limit. Each call runs in an empty temporary folder in read-only mode;
-answers must match the agent's JSON schema and allowed values or they are retried, then dropped. Set
-`llm.backend: api` to use the Anthropic API instead (`ANTHROPIC_API_KEY`). When nothing answers, every agent
-falls back to rule-based behaviour, and the ledger records which CLI (or rule) made each decision.
+Python 3.12 · pandas · scikit-learn · LightGBM · Optuna · SHAP · LangGraph · FastAPI · React + TypeScript (Vite)
 
-## Run
+## Data credits
 
-```bash
-python scripts/run_pipeline.py                 # full run
-python scripts/run_pipeline.py --leaky-demo    # adds tomorrow's PM2.5 as a feature: the guard must halt
-python scripts/run_pipeline.py --no-llm        # rule-based critic only
-pytest                                         # unit tests
-```
-
-## Bring your own dataset
-
-The pipeline runs on any air-quality dataset that fits the use case. The **schema adapter** agent maps it onto
-the canonical schema the Delhi dataset uses ([`src/aqi/schema.py`](src/aqi/schema.py): one row per station-hour,
-IST timestamps, 18 pollutant and weather variables in fixed units).
-
-- **Layouts:** wide (one column per variable) or long (OpenAQ-style `parameter / value / unit` rows); CSV, CSV.GZ,
-  Parquet or Excel; one file or a folder (side tables with station names and cities are joined automatically).
-- **Detection:** timestamp column (or date + time), timezone (tz-aware data is converted to IST), station column
-  (or the file name), granularity (sub-hourly is averaged to hours; daily data stays daily).
-- **Mapping:** aliases (`O3` → `Ozone`, `pm2_5` → `PM2.5`, …), units from headers or unit columns, converted with
-  molar masses for ppb/ppm and standard factors for weather units. Columns the rules can't place are offered to
-  Claude, whose answer must name a canonical variable and a convertible unit. A source's own AQI is never imported.
-- **Checks:** physically impossible values become missing; data without at least three pollutants (PM2.5 or PM10
-  among them) is rejected with a reason.
-
-```bash
-python scripts/adapt_dataset.py data/raw/external/vopani --name vopani_delhi --city Delhi
-python scripts/run_pipeline.py --config configs/vopani_delhi.yaml
-```
-
-The script writes `data/processed/<name>/canonical.parquet`, a `schema_report.json` with every mapping decision,
-and `configs/<name>.yaml` with years and a train/val/test split fitted to that dataset. Adapted datasets also appear
-in the console's dataset picker. Setting `data.source: {format: auto, path: ...}` in a config adapts inside the run.
-
-## Console (React + FastAPI)
-
-The pipeline console is a React/TypeScript app (`web/`) backed by a small FastAPI service (`api/`). It shows the
-agents live, the cleaner's decisions, the critic loop, the locked 2025 test (day-by-day forecast strip per station,
-confusion matrix), SHAP drivers and the results summary, and it can start new runs.
-
-```bash
-uvicorn api.server:app --port 8000             # API
-cd web && npm install && npm run dev           # dev server on http://localhost:5173 (proxies /api)
-```
-
-For a single-process setup, run `npm run build` in `web/`, then start uvicorn: it serves the built app at
-http://localhost:8000.
-
-Set `AQI_REPLAY_FROM=<run_id>` to replay a previous run's cached LLM decisions exactly.
+Delhi CPCB station data (Kaggle `yug201`), ERA5 via Open-Meteo, CAMS global forecasts from the Copernicus
+Atmosphere Data Store (CC-BY 4.0), and Kaggle "Air Quality Data in India (2015–2020)". Raw data is not
+redistributed here; [docs/DATA.md](docs/DATA.md) explains how to download it.

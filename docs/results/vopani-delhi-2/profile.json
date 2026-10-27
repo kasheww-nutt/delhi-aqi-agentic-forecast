@@ -1,0 +1,167 @@
+{
+  "stations_total": 38,
+  "stations_kept": 5,
+  "dropped": [
+    "DL001_Alipur_Delhi_DPCC",
+    "DL003_Ashok_Vihar_Delhi_DPCC",
+    "DL004_Aya_Nagar_Delhi_IMD",
+    "DL005_Bawana_Delhi_DPCC",
+    "DL006_Burari_Crossing_Delhi_IMD",
+    "DL007_CRRI_Mathura_Road_Delhi_IMD",
+    "DL008_DTU_Delhi_CPCB",
+    "DL009_Dr_Karni_Singh_Shooting_Range_Delhi_DPCC",
+    "DL010_Dwarka_Sector_8_Delhi_DPCC",
+    "DL011_East_Arjun_Nagar_Delhi_CPCB",
+    "DL012_IGI_Airport_T3_Delhi_IMD",
+    "DL013_IHBAS_Dilshad_Garden_Delhi_CPCB",
+    "DL014_ITO_Delhi_CPCB",
+    "DL015_Jahangirpuri_Delhi_DPCC",
+    "DL016_Jawaharlal_Nehru_Stadium_Delhi_DPCC",
+    "DL017_Lodhi_Road_Delhi_IMD",
+    "DL018_Major_Dhyan_Chand_National_Stadium_Delhi_DPCC",
+    "DL020_Mundka_Delhi_DPCC",
+    "DL021_NSIT_Dwarka_Delhi_CPCB",
+    "DL022_Najafgarh_Delhi_DPCC",
+    "DL023_Narela_Delhi_DPCC",
+    "DL024_Nehru_Nagar_Delhi_DPCC",
+    "DL025_North_Campus_DU_Delhi_IMD",
+    "DL026_Okhla_Phase_2_Delhi_DPCC",
+    "DL027_Patparganj_Delhi_DPCC",
+    "DL029_Pusa_Delhi_DPCC",
+    "DL030_Pusa_Delhi_IMD",
+    "DL032_Rohini_Delhi_DPCC",
+    "DL033_Shadipur_Delhi_CPCB",
+    "DL035_Sonia_Vihar_Delhi_DPCC",
+    "DL036_Sri_Aurobindo_Marg_Delhi_DPCC",
+    "DL037_Vivek_Vihar_Delhi_DPCC",
+    "DL038_Wazirpur_Delhi_DPCC"
+  ],
+  "median_coverage_by_year": {
+    "PM2.5": {
+      "2015": 58.0,
+      "2016": 35.0,
+      "2017": 45.0,
+      "2018": 96.0,
+      "2019": 97.0
+    },
+    "PM10": {
+      "2015": 29.0,
+      "2016": 0.0,
+      "2017": 33.0,
+      "2018": 95.0,
+      "2019": 96.0
+    },
+    "NO": {
+      "2015": 79.0,
+      "2016": 55.0,
+      "2017": 43.0,
+      "2018": 95.0,
+      "2019": 96.0
+    },
+    "NO2": {
+      "2015": 74.0,
+      "2016": 35.0,
+      "2017": 48.0,
+      "2018": 95.0,
+      "2019": 96.0
+    },
+    "NOx": {
+      "2015": 76.0,
+      "2016": 68.0,
+      "2017": 85.0,
+      "2018": 96.0,
+      "2019": 96.0
+    },
+    "NH3": {
+      "2015": 58.0,
+      "2016": 15.0,
+      "2017": 0.0,
+      "2018": 95.0,
+      "2019": 93.0
+    },
+    "SO2": {
+      "2015": 68.0,
+      "2016": 22.0,
+      "2017": 0.0,
+      "2018": 95.0,
+      "2019": 97.0
+    },
+    "CO": {
+      "2015": 55.0,
+      "2016": 23.0,
+      "2017": 85.0,
+      "2018": 96.0,
+      "2019": 96.0
+    },
+    "Ozone": {
+      "2015": 75.0,
+      "2016": 11.0,
+      "2017": 36.0,
+      "2018": 95.0,
+      "2019": 96.0
+    },
+    "Benzene": {
+      "2015": 82.0,
+      "2016": 64.0,
+      "2017": 51.0,
+      "2018": 95.0,
+      "2019": 94.0
+    },
+    "Toluene": {
+      "2015": 82.0,
+      "2016": 65.0,
+      "2017": 43.0,
+      "2018": 94.0,
+      "2019": 94.0
+    },
+    "AT": {
+      "2015": 0.0,
+      "2016": 0.0,
+      "2017": 0.0,
+      "2018": 0.0,
+      "2019": 0.0
+    },
+    "RH": {
+      "2015": 0.0,
+      "2016": 0.0,
+      "2017": 0.0,
+      "2018": 0.0,
+      "2019": 0.0
+    },
+    "WS": {
+      "2015": 0.0,
+      "2016": 0.0,
+      "2017": 0.0,
+      "2018": 0.0,
+      "2019": 0.0
+    },
+    "WD": {
+      "2015": 0.0,
+      "2016": 0.0,
+      "2017": 0.0,
+      "2018": 0.0,
+      "2019": 0.0
+    },
+    "RF": {
+      "2015": 0.0,
+      "2016": 0.0,
+      "2017": 0.0,
+      "2018": 0.0,
+      "2019": 0.0
+    },
+    "SR": {
+      "2015": 0.0,
+      "2016": 0.0,
+      "2017": 0.0,
+      "2018": 0.0,
+      "2019": 0.0
+    },
+    "BP": {
+      "2015": 0.0,
+      "2016": 0.0,
+      "2017": 0.0,
+      "2018": 0.0,
+      "2019": 0.0
+    }
+  }
+}
