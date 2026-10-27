@@ -31,7 +31,7 @@ the present, so using them as features for past dates would leak hindsight. The 
 | `station_snapshot(station, days)` | the station's latest daily AQI, category and PM2.5 | the newest pipeline run's `daily.parquet` | none |
 | `fires(start_date, days, region)` | satellite fire count, high-confidence count, count per day, total fire radiative power, the 5 strongest fires | NASA FIRMS, VIIRS (near-real-time for the last 60 days, archive before) | `FIRMS_MAP_KEY` in `.env`; up to 10 days; regions `punjab_haryana`, `delhi_ncr` |
 | `nearby_sources(place, radius_km)` | construction sites, industrial areas, landfills, power plants and major roads within 0.5–5 km, nearest first | OpenStreetMap (Nominatim to find the place, Overpass for features) | no key; 3 Overpass mirrors, 25 s each; answers cached in `data/cache/`; when all are busy, a **saved snapshot** for the station is returned, marked with its date |
-| WebSearch / WebFetch | this week's news: GRAP stage, demolition, waste fires, traffic | built into Claude Code | none |
+| WebSearch / WebFetch | this week's news (GRAP stage, waste fires, traffic) and **local sources found by searching the station's locality**: construction or demolition, metro and road works, industrial areas, depots | built into Claude Code | none |
 
 The tool code is in [`src/aqi/scout_tools.py`](../src/aqi/scout_tools.py); the MCP server only wraps it.
 
@@ -65,10 +65,18 @@ Anand Vihar, 26 Oct 2026, about 3 minutes:
 - **Honesty:** it said the station data ends on 31 Dec 2025, and that the map lookup had failed because
   OpenStreetMap was busy, instead of guessing.
 
+### Example 2: local sources found by web search (27 Oct 2026, 1 min 46 s)
+
+The map servers were busy, so `nearby_sources` failed once and was not retried. A web search of the locality
+found the local drivers instead, each with a news link: bus congestion and unauthorised bus parking at the
+Anand Vihar ISBT, unpaved roads and potholes, dumped construction waste, open waste burning, and unfinished
+DTIDC road works.
+
 ## 6. Known limits
 
 - It isn't scored: there is no metric for whether a brief is right. Check its claims against the cited sources.
-- OpenStreetMap's public servers are often busy. The tool then falls back to the saved snapshot
+- OpenStreetMap's public servers are often busy. The scout then relies on its web search of the station's
+  locality for local sources (it always runs one). An optional saved snapshot can also be used
   (`src/aqi/osm_snapshot.json`, built with `python scripts/build_osm_snapshot.py`), which the brief marks with its date.
 - Mapped sites are not a live permit list: a construction area on the map may be finished.
 - Only the Claude Code CLI is wired to the MCP tools. Codex, Gemini CLI and agy also support MCP; connecting

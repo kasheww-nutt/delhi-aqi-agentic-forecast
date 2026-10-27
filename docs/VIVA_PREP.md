@@ -243,8 +243,8 @@ using satellite fire data, maps and this week's news, with every claim sourced."
   removes every other MCP server or connected account, the folder is empty, and there's a 7-minute limit.
 - **How do you know the brief is right?** Every claim cites a tool or a link, so it can be checked. A tool that
   fails says so instead of guessing. The brief isn't scored automatically; that's future work.
-- **What if OpenStreetMap is down?** The tool tries 3 servers for 25 seconds each, then uses a saved snapshot of
-  the map data for that station, and the brief says which date it is from.
+- **What if OpenStreetMap is down?** The tool tries 3 servers for 25 seconds each, and the scout finds local sources
+  with a web search of the station's locality instead (construction, road works, depots), each with a link.
 - **Does it change the results?** No. Macro-F1 stays 0.600. The scout adds explanation, not accuracy.
 - **What is FIRMS fire radiative power?** How much heat a fire gives off, in megawatts. Bigger fires give off
   more smoke.
