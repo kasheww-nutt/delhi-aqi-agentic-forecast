@@ -1,0 +1,184 @@
+{
+  "source": "C:\\Users\\kashif\\pro-lol\\Projects\\AUCML\\data\\raw\\external\\vopani",
+  "files_used": [
+    {
+      "file": "station_hour.csv",
+      "layout": "wide",
+      "timestamp": "Datetime",
+      "station": "StationId",
+      "tz": "naive timestamps assumed to be local time (Asia/Kolkata)",
+      "granularity": "hourly"
+    }
+  ],
+  "files_skipped": [
+    {
+      "file": "station_day.csv",
+      "reason": "daily data; a finer (hourly) table is present"
+    }
+  ],
+  "metadata_files": [
+    "stations.csv"
+  ],
+  "granularity": "hourly",
+  "source_granularity": "hourly",
+  "city_filter": "Delhi",
+  "stations": 38,
+  "rows": 1087388,
+  "start": "2015-01-01 01:00:00",
+  "end": "2020-07-01 00:00:00",
+  "mappings": [
+    {
+      "source": "PM2.5",
+      "canonical": "PM2.5",
+      "unit_from": "ug/m3 (assumed)",
+      "unit_to": "ug/m3",
+      "conversion": "already canonical",
+      "by": "alias"
+    },
+    {
+      "source": "PM10",
+      "canonical": "PM10",
+      "unit_from": "ug/m3 (assumed)",
+      "unit_to": "ug/m3",
+      "conversion": "already canonical",
+      "by": "alias"
+    },
+    {
+      "source": "NO",
+      "canonical": "NO",
+      "unit_from": "ug/m3 (assumed)",
+      "unit_to": "ug/m3",
+      "conversion": "already canonical",
+      "by": "alias"
+    },
+    {
+      "source": "NO2",
+      "canonical": "NO2",
+      "unit_from": "ug/m3 (assumed)",
+      "unit_to": "ug/m3",
+      "conversion": "already canonical",
+      "by": "alias"
+    },
+    {
+      "source": "NOx",
+      "canonical": "NOx",
+      "unit_from": "ppb (assumed)",
+      "unit_to": "ppb",
+      "conversion": "already canonical",
+      "by": "alias"
+    },
+    {
+      "source": "NH3",
+      "canonical": "NH3",
+      "unit_from": "ug/m3 (assumed)",
+      "unit_to": "ug/m3",
+      "conversion": "already canonical",
+      "by": "alias"
+    },
+    {
+      "source": "CO",
+      "canonical": "CO",
+      "unit_from": "mg/m3 (assumed)",
+      "unit_to": "mg/m3",
+      "conversion": "already canonical",
+      "by": "alias"
+    },
+    {
+      "source": "SO2",
+      "canonical": "SO2",
+      "unit_from": "ug/m3 (assumed)",
+      "unit_to": "ug/m3",
+      "conversion": "already canonical",
+      "by": "alias"
+    },
+    {
+      "source": "O3",
+      "canonical": "Ozone",
+      "unit_from": "ug/m3 (assumed)",
+      "unit_to": "ug/m3",
+      "conversion": "already canonical",
+      "by": "alias"
+    },
+    {
+      "source": "Benzene",
+      "canonical": "Benzene",
+      "unit_from": "ug/m3 (assumed)",
+      "unit_to": "ug/m3",
+      "conversion": "already canonical",
+      "by": "alias"
+    },
+    {
+      "source": "Toluene",
+      "canonical": "Toluene",
+      "unit_from": "ug/m3 (assumed)",
+      "unit_to": "ug/m3",
+      "conversion": "already canonical",
+      "by": "alias"
+    }
+  ],
+  "ignored": [
+    {
+      "column": "Xylene",
+      "reason": "measured, but not part of the canonical schema"
+    },
+    {
+      "column": "AQI",
+      "reason": "the source's own AQI; the pipeline recomputes AQI from pollutants (CPCB rules)"
+    },
+    {
+      "column": "AQI_Bucket",
+      "reason": "the source's own AQI; the pipeline recomputes AQI from pollutants (CPCB rules)"
+    }
+  ],
+  "missing_variables": [
+    "AT",
+    "RH",
+    "WS",
+    "WD",
+    "RF",
+    "SR",
+    "BP"
+  ],
+  "out_of_range_set_missing": {},
+  "coverage_pct": {
+    "PM2.5": 77.2,
+    "PM10": 67.9,
+    "NO": 79.5,
+    "NO2": 79.9,
+    "NOx": 83.1,
+    "NH3": 57.8,
+    "SO2": 64.0,
+    "CO": 78.6,
+    "Ozone": 75.8,
+    "Benzene": 67.2,
+    "Toluene": 63.6
+  },
+  "warnings": [
+    "no meteorology columns: the station_meteorology features will be empty"
+  ],
+  "suggested_settings": {
+    "years": [
+      2015,
+      2019
+    ],
+    "split": {
+      "train": [
+        "2015-01-01",
+        "2017-12-31"
+      ],
+      "val": [
+        "2018-01-01",
+        "2018-12-31"
+      ],
+      "test": [
+        "2019-01-01",
+        "2019-12-31"
+      ]
+    },
+    "min_years_meeting_coverage": 3,
+    "groups": {
+      "era5_blh": true,
+      "cams_forecast": true
+    }
+  }
+}
