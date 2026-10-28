@@ -35,6 +35,7 @@ forecast, the same model falls just short of persistence (0.574).
 | [docs/DATA.md](docs/DATA.md) | data sources, variables, the CAMS leakage-safe setup, data quality, the second dataset |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | the 14 agents, state, ledger, LLM CLIs, API and console, repository layout |
 | [docs/RESULTS.md](docs/RESULTS.md) | every result with its source run, plus honest limits |
+| [docs/MODEL_COMPARISON.md](docs/MODEL_COMPARISON.md) | every model's scores per round, why LightGBM was chosen, and what the CAMS forecast added |
 | [docs/REPRODUCE.md](docs/REPRODUCE.md) | install, keys, downloads, commands, expected numbers, timings |
 | [docs/SCOUT.md](docs/SCOUT.md) | v1.1 source scout: live explanation of what is polluting a station (MCP tools + web search) |
 | [docs/VIVA_PREP.md](docs/VIVA_PREP.md) | viva guide in simple words: story, choices, likely questions |
