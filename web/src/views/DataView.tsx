@@ -1,6 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import { api, useResource } from "../api";
 import { SchemaCard } from "../components/SchemaCard";
+import { SupportedDataCard } from "../components/SupportedDataCard";
 import { hasArtifact, reports } from "../ledger";
 import type { LedgerEvent } from "../types";
 
@@ -13,7 +14,7 @@ export function DataView(props: { runId: string; events: LedgerEvent[] }) {
   const hasNotes = hasArtifact(events, "eda", "eda_notes.md");
   const notes = useResource(() => (hasNotes ? api.text(runId, "eda_notes.md") : Promise.resolve(null)), [runId, hasNotes]);
 
-  if (!profiler) return <p className="empty">The data agents haven't reported yet.</p>;
+  if (!profiler) return <><SupportedDataCard /><p className="empty">The data agents haven't reported yet.</p></>;
   const problems = (guard?.problems as string[] | undefined) ?? [];
   const decisions = (cleaner?.decisions as string[] | undefined) ?? [];
   const skipped = (features?.skipped_groups as string[] | undefined) ?? [];
@@ -23,6 +24,7 @@ export function DataView(props: { runId: string; events: LedgerEvent[] }) {
 
   return (
     <>
+      <SupportedDataCard />
       <SchemaCard runId={runId} events={events} />
       {guard && (
         <section className="card" style={{ borderLeft: `4px solid var(${guard.status === "halt" ? "--bad" : "--ok"})` }}>

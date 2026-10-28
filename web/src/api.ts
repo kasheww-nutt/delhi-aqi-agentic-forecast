@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { DatasetConfig, LedgerEvent, RunSummary, ScoutRun, SpecNode, StationForecast } from "./types";
+import type { DatasetConfig, LedgerEvent, RunSummary, ScoutRun, SpecNode, StationForecast, SupportedSchema } from "./types";
 
 async function get<T>(path: string): Promise<T> {
   const r = await fetch(path);
@@ -9,6 +9,7 @@ async function get<T>(path: string): Promise<T> {
 
 export const api = {
   spec: () => get<SpecNode[]>("/api/spec"),
+  schema: () => get<SupportedSchema>("/api/schema"),
   runs: () => get<RunSummary[]>("/api/runs"),
   configs: () => get<DatasetConfig[]>("/api/configs"),
   events: (id: string) => get<LedgerEvent[]>(`/api/runs/${id}/events`),

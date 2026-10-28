@@ -20,6 +20,8 @@ from pydantic import BaseModel
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
+from aqi import schema as S  # noqa: E402
+from aqi.agents.schema_adapter import READERS  # noqa: E402
 from aqi.ledger import read_events  # noqa: E402
 from aqi.spec import KIND, NODES  # noqa: E402
 
@@ -55,6 +57,25 @@ def _summary(d: Path) -> dict:
 @app.get("/api/spec")
 def spec():
     return [{"name": n, "kind": KIND[n]} for n in NODES]
+
+
+# Units the adapter can be handed; each is offered only where schema.converter knows the conversion.
+_UNITS = ["ug/m3", "mg/m3", "ng/m3", "ppb", "ppm", "degc", "degf", "kelvin", "%", "fraction", "m/s", "km/h",
+          "knots", "mph", "deg", "mm", "cm", "in", "w/m2", "mmhg", "hpa", "kpa", "pa", "inhg"]
+
+
+@app.get("/api/schema")
+def schema():
+    """What the schema adapter accepts, read from aqi.schema so the console always matches the rules."""
+    return {
+        "variables": [{"name": v.name, "unit": v.unit, "kind": v.kind, "range": [v.lo, v.hi], "aliases": list(v.aliases),
+                       "accepts": [u for u in _UNITS if S.converter(v, u)]} for v in S.VARIABLES],
+        "timezone": S.TIMEZONE,
+        "timestamp_names": list(S.TIMESTAMP_NAMES), "station_names": list(S.STATION_NAMES),
+        "long_layout": {"parameter": list(S.PARAMETER_NAMES), "value": list(S.VALUE_NAMES), "unit": list(S.UNIT_NAMES)},
+        "ignored_aqi": list(S.IGNORE_AQI), "ignored_extra": list(S.IGNORE_EXTRA),
+        "formats": sorted({s.lstrip(".") for s in READERS}),
+    }
 
 
 @app.get("/api/runs")

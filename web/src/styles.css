@@ -456,3 +456,12 @@ table.metrics tr.best td:first-child { box-shadow: inset 3px 0 0 var(--accent); 
 .err-text { color: var(--bad, #fb7185); }
 @media (max-width: 760px) { .scout-body { grid-template-columns: 1fr; } }
 .small { font-size: 13px; margin-top: 10px; }
+
+/* ── Supported data (Data page) ────────────────────────────────────────── */
+.supported h3 { font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin: 22px 0 6px; }
+.supported code { font: 12.5px var(--mono); background: var(--bg-2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 5px; }
+.supported .small { margin: 0 0 10px; }
+.supported .kind { display: block; font: 11.5px var(--body); }
+.supported tr.group-start td { border-top: 1px solid var(--line-strong); }
+.supported details ul { margin-top: 10px; }
+.table-scroll { overflow-x: auto; }

@@ -91,3 +91,15 @@ export interface ScoutRun {
   error: string | null;
   events: LedgerEvent[];
 }
+
+/** What the schema adapter accepts (GET /api/schema, read from src/aqi/schema.py). */
+export interface SupportedSchema {
+  variables: { name: string; unit: string; kind: "pollutant" | "meteorology"; range: [number, number]; aliases: string[]; accepts: string[] }[];
+  timezone: string;
+  timestamp_names: string[];
+  station_names: string[];
+  long_layout: { parameter: string[]; value: string[]; unit: string[] };
+  ignored_aqi: string[];
+  ignored_extra: string[];
+  formats: string[];
+}

@@ -65,3 +65,14 @@ def test_split_follows_the_datasets_own_years():
     assert s["split"]["test"][0].startswith("2019") and s["split"]["val"][0].startswith("2018")
     assert s["split"]["train"] == ["2015-01-01", "2017-12-31"]
     assert s["groups"]["cams_forecast"] is True
+
+
+def test_console_lists_the_accepted_schema():
+    from fastapi.testclient import TestClient
+
+    from api.server import app
+    s = TestClient(app).get("/api/schema").json()
+    assert [v["name"] for v in s["variables"]] == S.CANONICAL
+    no2 = next(v for v in s["variables"] if v["name"] == "NO2")
+    assert {"ug/m3", "ppb", "ppm"} <= set(no2["accepts"])
+    assert "aqi" in s["ignored_aqi"] and "csv" in s["formats"]

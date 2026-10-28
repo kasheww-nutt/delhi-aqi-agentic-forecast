@@ -83,6 +83,7 @@ Agents 4, 11 and 13 (and 1 for unknown columns) can use an LLM. All others are p
 
 - **API** ([`api/server.py`](../api/server.py)):
   - `GET /api/spec`: the agent list and types.
+  - `GET /api/schema`: what data the pipeline accepts (variables, units, ranges, recognised column names), read from `src/aqi/schema.py`; shown at the top of the **Data** page.
   - `GET /api/runs`: all runs with status and headline score.
   - `GET /api/runs/{id}/events`: the run's ledger.
   - `GET /api/runs/{id}/artifacts/{name}`, `/text/{name}`, `/predictions`, `/shap`: outputs.
@@ -106,6 +107,6 @@ Agents 4, 11 and 13 (and 1 for unknown columns) can use an LLM. All others are p
 | `src/aqi/ledger.py` | the experiment ledger |
 | `scripts/` | run the pipeline, adapt a dataset, download ERA5 and CAMS, watch a run in the terminal |
 | `api/`, `web/` | FastAPI service and React console |
-| `tests/` | 26 unit tests: AQI, leakage guard, splits, schema adapter, LLM CLI handling, scout tools |
+| `tests/` | 27 unit tests: AQI, leakage guard, splits, schema adapter, LLM CLI handling, scout tools |
 | `src/aqi/scout*.py`, `scripts/scout_mcp.py` | v1.1 source scout and its MCP tool server ([SCOUT.md](SCOUT.md)) |
 | `docs/` | these documents, the results snapshot and the planning audits |
