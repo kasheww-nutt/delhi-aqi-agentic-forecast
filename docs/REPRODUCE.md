@@ -8,24 +8,30 @@ instead of `.venv/Scripts/`).
 ```bash
 git clone https://github.com/kasheww-nutt/delhi-aqi-agentic-forecast.git
 cd delhi-aqi-agentic-forecast
-git checkout v1.0-ese
 python -m venv .venv
-.venv/Scripts/pip install -r requirements.txt
+.venv/Scripts/pip install -r requirements-lock.txt   # exact versions; requirements.txt also works
 .venv/Scripts/pip install -e .
-.venv/Scripts/python -m pytest          # 18 tests should pass
+.venv/Scripts/python -m pytest          # 27 tests should pass
 ```
+
+`main` includes the dataset (see §3), so the steps below run as they are. The `v1.0-ese` tag (the version in the
+deck) has 18 tests and no data folder: download the data as in §3, or copy `data/` from `main`. The numbers are the same.
 
 ## 2. Accounts and keys (never commit these)
 
 | What | Needed for | Where it goes |
 |---|---|---|
-| Kaggle account + API token | station data | `~/.kaggle/` (see Kaggle's API docs) |
-| Copernicus ADS account + API key, CAMS licence accepted | CAMS forecasts | `~/.cdsapirc` |
+| Kaggle account + API token | only to re-download the station data | `~/.kaggle/` (see Kaggle's API docs) |
+| Copernicus ADS account + API key, CAMS licence accepted | only to re-download the CAMS forecasts | `~/.cdsapirc` |
 | A logged-in coding-agent CLI (Claude Code, Gemini CLI, Codex or agy) | optional LLM notes and LLM critic | the CLI's own login |
 
 Without any CLI, run with `--no-llm`: the results are the same (see RESULTS.md §7).
 
-## 3. Download the data
+## 3. The data
+
+The files the pipeline reads are already in `data/` (CPCB 2018–2025, `data/raw/cams/cams_daily_delhi.csv`,
+`data/raw/era5_delhi_blh.csv`, and the adapted second dataset in `data/processed/vopani_delhi/`). Skip this
+section unless you want to download them again or refresh them:
 
 ```bash
 .venv/Scripts/pip install kaggle                              # the Kaggle command-line tool
@@ -60,6 +66,14 @@ AQI_REPLAY_FROM=cams-full python scripts/run_pipeline.py --run-id cams-replay
 ```
 
 ## 5. Second dataset
+
+The adapted dataset is included, so this runs as it is:
+
+```bash
+python scripts/run_pipeline.py --config configs/vopani_delhi.yaml
+```
+
+To rebuild it from the raw Kaggle files (220 MB, not in the repository):
 
 ```bash
 # put the Kaggle "Air Quality Data in India" files in data/raw/external/vopani/
