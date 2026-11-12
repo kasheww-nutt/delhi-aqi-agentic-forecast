@@ -16,7 +16,7 @@ from ..llm import LLM
 NARRATOR = ("You are the explainer agent of a next-day AQI-category forecaster for Delhi. Given the "
             "mean |SHAP| importance of the top features (suffix _t0 = today, lagN = N days ago, _t1 = "
             "tomorrow's calendar or a forecast issued today), write 3-5 bullets on what drives tomorrow's "
-            "category, in plain language for a viva panel. Flag anything that looks suspicious.")
+            "category, in plain language for a non-specialist reviewer. Flag anything that looks suspicious.")
 
 
 def run(state: dict, ledger: Ledger) -> dict:

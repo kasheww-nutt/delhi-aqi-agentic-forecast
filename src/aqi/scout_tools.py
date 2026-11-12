@@ -18,7 +18,7 @@ import requests
 
 from .config import ROOT
 
-UA = {"User-Agent": "aqi-student-project/0.1 (AUCML coursework)"}
+UA = {"User-Agent": "delhi-aqi-forecast/1.1"}
 OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter", "https://overpass.private.coffee/api/interpreter"]
 REGIONS = {  # west, south, east, north
     "punjab_haryana": (73.8, 29.5, 77.6, 32.6),

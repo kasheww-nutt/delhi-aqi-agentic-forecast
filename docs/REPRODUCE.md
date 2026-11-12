@@ -14,8 +14,8 @@ python -m venv .venv
 .venv/Scripts/python -m pytest          # 27 tests should pass
 ```
 
-`main` includes the dataset (see §3), so the steps below run as they are. The `v1.0-ese` tag (the version in the
-deck) has 18 tests and no data folder: download the data as in §3, or copy `data/` from `main`. The numbers are the same.
+`main` includes the dataset (see §3), so the steps below run as they are. The first tagged release
+has 18 tests and no data folder: download the data as in §3, or copy `data/` from `main`. The numbers are the same.
 
 ## 2. Accounts and keys (never commit these)
 

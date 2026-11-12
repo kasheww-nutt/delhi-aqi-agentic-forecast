@@ -140,7 +140,7 @@ Only the selected model and persistence are scored on the test year.
   - Use the nearest CAMS cell for each station instead of the city average.
   - Or use a finer regional forecast, if an archive of past forecasts becomes available.
 
-## 6. Viva answer
+## 6. The short version
 
 > "We trained four models on the same features. Logistic regression fell below persistence and random forest
 > overfit (train 0.97 vs validation 0.59). Tuned LightGBM had the best validation macro-F1, 0.594, after the critic

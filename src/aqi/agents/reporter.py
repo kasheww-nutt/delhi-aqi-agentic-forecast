@@ -1,4 +1,4 @@
-"""Reporter (rule-based): turns the ledger into a results summary for the report and slides.
+"""Reporter (rule-based): turns the ledger into a results summary.
 
 It drafts tables and facts only; the written report itself is authored by the team.
 """

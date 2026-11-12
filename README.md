@@ -1,6 +1,6 @@
 # Delhi Next-Day AQI Forecasting: an Agentic ML Pipeline
 
-AUCML (TE7483) ESE case study · **v1.1** = v1.0 (the version in the deck and report, tag `v1.0-ese`) + the source scout
+**v1.1** = v1.0 (the first tagged release) + the source scout
 
 **Question.** Can a model beat "tomorrow = today" at forecasting tomorrow's CPCB air-quality category, using
 only what is known today?
@@ -38,10 +38,8 @@ forecast, the same model falls just short of persistence (0.574).
 | [docs/MODEL_COMPARISON.md](docs/MODEL_COMPARISON.md) | every model's scores per round, why LightGBM was chosen, and what the CAMS forecast added |
 | [docs/REPRODUCE.md](docs/REPRODUCE.md) | install, keys, downloads, commands, expected numbers, timings |
 | [docs/SCOUT.md](docs/SCOUT.md) | v1.1 source scout: live explanation of what is polluting a station (MCP tools + web search) |
-| [docs/VIVA_PREP.md](docs/VIVA_PREP.md) | viva guide in simple words: story, choices, likely questions |
 | [docs/GLOSSARY.md](docs/GLOSSARY.md) | every term used, explained simply with a project example |
 | [docs/results/](docs/results/) | the saved run ledgers, figures and `results.json` behind every number |
-| [docs/planning/](docs/planning/) | the original project audit and day-1 data-gate notes |
 
 ## Pipeline
 
@@ -66,7 +64,7 @@ schema_adapter → ingestion → profiler → eda → cleaner → features → l
 | critic | LLM / rule | one whitelisted action per round, or STOP; stopping rules enforced in code |
 | tester | rule (once) | verifies the hash, refits on train+val, scores 2025 once |
 | explainer | rule + LLM | SHAP drivers + plain-language notes |
-| reporter | rule | results tables for the report |
+| reporter | rule | results summary tables |
 
 ## Dataset (included)
 

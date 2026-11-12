@@ -33,9 +33,6 @@ runs/
 kaggle.json
 access_token
 
-# Course material (not ours to redistribute)
-Detailed ESE Evaluation Rubric.pdf
-
 # Local tool config
 .claude/
 
